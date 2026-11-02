@@ -1,0 +1,17 @@
+# Datos y resultados: se regeneran con scripts/
+data/
+resultados/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Editores y sistema
+.DS_Store
+.vscode/
+.idea/
