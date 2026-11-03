@@ -4,7 +4,8 @@ import numpy as np
 import pytest
 
 from estadios.comun.config import ConfigDescriptores
-from estadios.comun.constantes import N1, R
+from estadios.comun.constantes import CANALES, N1, R, W
+from estadios.comun.contratos import Registro, RegistroPreprocesado
 from estadios.comun.sintetico import preprocesado_sintetico
 from estadios.descriptores import csp, espectro, hrv, husos, ondas_lentas, perifericos, woody
 
@@ -191,3 +192,98 @@ def test_cada_grupo_respeta_el_contrato(funcion, prefijo):
     assert matriz.shape == (prep.registro.n_epocas, len(nombres))
     assert all(n.startswith(prefijo) for n in nombres)
     assert np.isfinite(matriz).all()  # LDA no admite NaN: una época sin eventos vale 0.
+
+
+def _prep_con_senal(canal, senal, n_epocas):
+    """Registro con todos los canales en silencio salvo uno."""
+    senales = {c: np.zeros(len(senal)) for c in CANALES}
+    senales[canal] = senal
+    registro = Registro("X", FS, senales, np.full(n_epocas, N1))
+    return RegistroPreprocesado(registro, np.array([], dtype=int), np.zeros(n_epocas, dtype=bool))
+
+
+def test_husos_se_cuentan_en_su_epoca():
+    cfg = ConfigDescriptores()
+    x = 3 * np.random.default_rng(0).standard_normal(3 * N_EPOCA)
+    t = np.arange(int(FS)) / FS
+    inicio = int(40 * FS)  # En la segunda época.
+    x[inicio : inicio + len(t)] += 30 * np.hanning(len(t)) * np.sin(2 * np.pi * 13 * t)
+
+    matriz, nombres = husos.descriptores_husos(_prep_con_senal(cfg.canal_husos, x, 3), cfg)
+    assert matriz[:, nombres.index("husos.cantidad")].tolist() == [0, 1, 0]
+    amplitud = matriz[:, nombres.index("husos.amplitud")]
+    assert amplitud[1] > 10 and amplitud[0] == amplitud[2] == 0
+
+
+def test_ondas_se_cuentan_en_su_epoca_y_se_parecen_a_la_forma_tipica():
+    cfg = ConfigDescriptores()
+    x = 2 * np.random.default_rng(0).standard_normal(3 * N_EPOCA)
+    t = np.arange(int(FS)) / FS
+    for inicio_s in (35, 45, 75):  # Dos en la segunda época y una en la tercera.
+        inicio = int(inicio_s * FS)
+        x[inicio : inicio + len(t)] -= 80 * np.sin(2 * np.pi * t)
+
+    matriz, nombres = ondas_lentas.descriptores_ondas_lentas(
+        _prep_con_senal(cfg.canal_ondas, x, 3), cfg
+    )
+    assert matriz[:, nombres.index("ondas.cantidad")].tolist() == [0, 2, 1]
+    similitud = matriz[:, nombres.index("ondas.similitud")]
+    assert similitud[0] == 0
+    assert similitud[1] > 0.9 and similitud[2] > 0.9
+
+
+def test_woody_alinea_en_el_sentido_correcto():
+    forma = _forma()
+    corrimientos = np.array([-30, -10, 0, 20, 30])
+    realizaciones = np.stack([np.roll(forma, c) for c in corrimientos])
+    resultado = woody.promediado_woody(realizaciones, max_desplazamiento=60)
+    alineadas = woody.alinear(realizaciones, resultado.desplazamientos)
+    # Arrancan 60 muestras separadas; moverlas al revés las separaría más. No llega a 0
+    # porque con 5 ondas cada una pesa mucho en el promedio contra el que se alinea.
+    assert np.ptp(np.nanargmin(alineadas, axis=1)) < 10
+
+
+def test_csp_ignora_los_demas_estadios():
+    rng = np.random.default_rng(0)
+    epocas = rng.standard_normal((200, 4, 1000))
+    y = np.array([N1, R] * 100)
+    epocas[y == N1, 0] *= 3
+    epocas[y == R, 3] *= 3
+    covarianzas = csp.covarianzas_por_epoca(epocas)
+    solo_par = csp.ajustar_csp(covarianzas, y, (N1, R), n_componentes=1)
+
+    otras = csp.covarianzas_por_epoca(100 * rng.standard_normal((50, 4, 1000)))
+    con_otras = csp.ajustar_csp(
+        np.concatenate([covarianzas, otras]), np.r_[y, np.full(50, W)], (N1, R), n_componentes=1
+    )
+    np.testing.assert_allclose(np.abs(solo_par.pesos), np.abs(con_otras.pesos))
+
+
+@pytest.mark.parametrize(
+    "funcion",
+    [
+        espectro.descriptores_espectrales,
+        husos.descriptores_husos,
+        ondas_lentas.descriptores_ondas_lentas,
+        perifericos.descriptores_perifericos,
+    ],
+)
+def test_senal_plana_da_descriptores_finitos(funcion):
+    n_epocas = 2
+    senales = {c: np.zeros(n_epocas * N_EPOCA) for c in CANALES}
+    registro = Registro("X", FS, senales, np.full(n_epocas, N1))
+    prep = RegistroPreprocesado(registro, np.array([], dtype=int), np.zeros(n_epocas, dtype=bool))
+    matriz, nombres = funcion(prep, ConfigDescriptores())
+    assert matriz.shape == (n_epocas, len(nombres))
+    assert np.isfinite(matriz).all()
+
+
+def test_espectro_con_welch_da_los_mismos_descriptores():
+    prep = preprocesado_sintetico(minutos=2)
+    multitaper, nombres_mt = espectro.descriptores_espectrales(prep, ConfigDescriptores())
+    welch, nombres_w = espectro.descriptores_espectrales(
+        prep, ConfigDescriptores(metodo_espectro="welch")
+    )
+    assert nombres_mt == nombres_w
+    assert multitaper.shape == welch.shape
+    assert not np.allclose(multitaper, welch)
