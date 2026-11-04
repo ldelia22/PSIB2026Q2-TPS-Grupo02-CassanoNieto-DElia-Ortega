@@ -100,7 +100,8 @@ forma que los reales:
 Contratos, configuración, datos sintéticos, carga de la base, descarga, partición por
 paciente, caché de descriptores y la conexión entre etapas (`pipeline.py`,
 `descriptores/ensamblado.py`). Del Frente C: reglas, suavizado, modelo, métricas, la
-prueba de Wilcoxon, H3 y la parte de κ de H4. Todo lo demás lanza
+prueba de Wilcoxon, H1, H2, H3, la parte de κ de H4 y la interfaz (las pestañas que
+dependen del Frente A avisan qué falta). Todo lo demás lanza
 `NotImplementedError` y es lo que falta hacer.
 
 ## Puesta en marcha
@@ -146,7 +147,7 @@ export ESTADIOS_DATOS="/Volumes/MiDisco/hmc"
 ```bash
 python scripts/calcular_descriptores.py    # Lento, pero queda en caché
 python scripts/entrenar_y_evaluar.py
-streamlit run app/streamlit_app.py
+python -m streamlit run app/streamlit_app.py
 jupyter lab notebooks/
 ```
 

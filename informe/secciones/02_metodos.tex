@@ -74,8 +74,8 @@ donde $p_o$ es la fracción de épocas en que el algoritmo coincide con los téc
 
 Cada hipótesis se verificó comparando dos variantes sobre los mismos pacientes, con la prueba de rangos con signo de Wilcoxon para muestras apareadas:
 \begin{itemize}
-  \item \textbf{H1:} variación de la potencia por banda entre épocas consecutivas de un mismo estadio, con multitaper y con Welch.
-  \item \textbf{H2:} se insertaron ondas lentas de forma conocida y con corrimientos al azar en EEG real de vigilia y se midió el error de la forma recuperada por Woody y por el promedio ordinario.
+  \item \textbf{H1:} diferencia absoluta media del logaritmo de la potencia entre épocas consecutivas de un mismo estadio, con multitaper y con Welch. Se calculó por banda, que es lo que usan los descriptores, y frecuencia por frecuencia entre \SIrange{0,5}{30}{\hertz}: integrar una banda ya promedia muchas frecuencias y reduce el ruido de ambos métodos, por lo que la ventaja del multitaper se espera sobre todo en la segunda medida.
+  \item \textbf{H2:} se insertaron \pendiente{40} ondas lentas de forma conocida (coseno de \SI{0,8}{\hertz} con envolvente gaussiana y \SI{80}{\micro\volt} de pico) en EEG real de vigilia, con corrimientos al azar de hasta \SI{0,25}{\second} respecto de la ventana de análisis. Se midió el error cuadrático medio de la forma recuperada por Woody y por el promedio ordinario, relativo al valor eficaz de la onda real y descontando el mejor corrimiento global.
   \item \textbf{H3:} F1 de N1 y de REM con y sin el desempate CSP.
   \item \textbf{H4:} amplitud del promedio del EEG alrededor de cada latido antes y después de la remoción, y $\kappa$ con y sin la remoción de artefactos y la HRV (sin ella, la regla de REM usa solo el EOG).
 \end{itemize}

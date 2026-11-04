@@ -147,3 +147,30 @@ def test_h3_compara_con_y_sin_csp():
     resultado = hipotesis.h3_aporte_csp(entrenamiento, prueba, Config())
     assert set(resultado) == {"N1", "R"}
     assert len(resultado["N1"].variante_a) == 4
+
+
+def _registros_ruido_blanco(n_registros=6, minutos=10, fs=128.0):
+    from estadios.comun.constantes import EEG_C4
+    from estadios.comun.contratos import Registro
+
+    registros = []
+    for semilla in range(n_registros):
+        rng = np.random.default_rng(semilla)
+        n_epocas = int(minutos * 2)
+        senal = 20 * rng.standard_normal(int(n_epocas * 30 * fs))
+        registros.append(Registro(f"RB{semilla}", fs, {EEG_C4: senal}, np.full(n_epocas, W)))
+    return registros
+
+
+def test_h1_multitaper_varia_menos_por_frecuencia_en_ruido_blanco():
+    resultado = hipotesis.h1_variabilidad_espectral(_registros_ruido_blanco(), por_frecuencia=True)
+    assert (resultado.variante_a < resultado.variante_b).all()
+
+
+def test_h2_woody_recupera_mejor_la_forma():
+    rng = np.random.default_rng(0)
+    fs = 128.0
+    eeg = [20 * rng.standard_normal(int(300 * fs)) for _ in range(6)]
+    resultado = hipotesis.h2_recuperacion_de_forma(eeg, fs)
+    assert len(resultado.variante_a) == 6
+    assert (resultado.variante_a < resultado.variante_b).all()
