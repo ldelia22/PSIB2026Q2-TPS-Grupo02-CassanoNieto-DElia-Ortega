@@ -179,8 +179,37 @@ def h3_aporte_csp(
 
 
 def h4_residuo_cardiaco(registros: list[Registro], cfg: Config) -> Comparacion:
-    """Tamaño del promedio del EEG alrededor de cada latido, tras (a) y antes (b) de remover."""
-    raise NotImplementedError("Sección 3")
+    """Tamaño del promedio del EEG alrededor de cada latido, tras (a) y antes (b) de remover.
+
+    Para aislar el efecto de la etapa 4, "antes" es la señal ya filtrada (y sin
+    artefacto ocular, si esa etapa está activa) y "después", la misma señal tras restar
+    la plantilla cardíaca. Por paciente se toma el máximo absoluto del promedio,
+    promediado entre los canales de EEG: si la remoción funciona, tiende a cero.
+    Usa funciones del Frente A (etapas 1, 2, 3 y 4).
+    """
+    from ..comun.constantes import CANALES_EEG, ECG
+    from ..preprocesamiento import cardiaco, exploratorio, filtrado, ocular, qrs
+
+    pre = cfg.preprocesamiento
+    a, b = [], []
+    for registro in registros:
+        latidos = qrs.detectar_latidos(registro.senales[ECG], registro.fs)
+        antes = filtrado.filtrar_registro(registro, pre)
+        if pre.remover_ocular:
+            antes = ocular.remover_artefacto_ocular(antes, pre)
+        despues = cardiaco.remover_artefacto_cardiaco(antes, latidos, pre)
+
+        def residuo(r: Registro) -> float:
+            return float(np.mean([
+                np.abs(exploratorio.promedio_alrededor_de_latidos(
+                    r.senales[c], latidos, r.fs, pre.ventana_plantilla_s
+                )[1]).max()
+                for c in CANALES_EEG
+            ]))
+
+        a.append(residuo(despues))
+        b.append(residuo(antes))
+    return comparar_por_paciente(np.array(a), np.array(b))
 
 
 def h4_aporte_al_acuerdo(

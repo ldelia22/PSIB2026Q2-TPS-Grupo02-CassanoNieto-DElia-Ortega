@@ -1,5 +1,7 @@
 """Especificación del Frente C: clasificación y evaluación."""
 
+from dataclasses import replace
+
 import numpy as np
 import pytest
 
@@ -174,3 +176,33 @@ def test_h2_woody_recupera_mejor_la_forma():
     resultado = hipotesis.h2_recuperacion_de_forma(eeg, fs)
     assert len(resultado.variante_a) == 6
     assert (resultado.variante_a < resultado.variante_b).all()
+
+
+def test_h4_residuo_compara_antes_y_despues(monkeypatch):
+    """Con el Frente A reemplazado por versiones mínimas: verifica solo el diseño de H4."""
+    from estadios.comun.config import Config
+    from estadios.comun.constantes import CANALES_EEG
+    from estadios.comun.sintetico import preprocesado_sintetico
+    from estadios.preprocesamiento import cardiaco, exploratorio, filtrado, qrs
+
+    preps = [preprocesado_sintetico(minutos=5, semilla=s) for s in range(5)]
+    latidos = {p.registro.id: p.latidos for p in preps}
+
+    def promedio(senal, lat, fs, ventana_s=(-0.2, 0.6)):
+        desde, hasta = int(ventana_s[0] * fs), int(ventana_s[1] * fs)
+        lat = lat[(lat + desde >= 0) & (lat + hasta < len(senal))]
+        tramos = np.stack([senal[i + desde : i + hasta] for i in lat])
+        return np.arange(desde, hasta) / fs, tramos.mean(axis=0)
+
+    monkeypatch.setattr(qrs, "detectar_latidos", lambda ecg, fs: next(
+        latidos[p.registro.id] for p in preps if p.registro.senales["ECG"] is ecg))
+    monkeypatch.setattr(filtrado, "filtrar_registro", lambda r, cfg: r)
+    monkeypatch.setattr(cardiaco, "remover_artefacto_cardiaco",
+                        lambda r, lat, cfg: r.reemplazar_senales({c: 0 * r.senales[c] for c in CANALES_EEG}))
+    monkeypatch.setattr(exploratorio, "promedio_alrededor_de_latidos", promedio)
+
+    cfg = Config()
+    cfg = replace(cfg, preprocesamiento=replace(cfg.preprocesamiento, remover_ocular=False))
+    resultado = hipotesis.h4_residuo_cardiaco([p.registro for p in preps], cfg)
+    assert (resultado.variante_a == 0).all()
+    assert (resultado.variante_b > 0).all()
