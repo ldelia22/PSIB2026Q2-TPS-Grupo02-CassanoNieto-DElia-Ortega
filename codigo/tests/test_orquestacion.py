@@ -6,7 +6,6 @@ import numpy as np
 import pytest
 
 from estadios import pipeline
-from estadios.clasificacion import hmm, lda
 from estadios.clasificacion.modelo import ModeloEstadios
 from estadios.comun.config import Config, ConfigClasificacion, ConfigDescriptores
 from estadios.comun.constantes import N_ESTADIOS, SIN_ANOTAR
@@ -99,33 +98,14 @@ def test_obtener_tabla_usa_el_cache(etapas_a, etapas_b, monkeypatch, tmp_path):
 
 @pytest.fixture
 def etapas_c(monkeypatch):
-    """Reemplaza LDA, HMM y CSP por versiones mínimas."""
+    """Reemplaza CSP por una versión mínima y registra con qué épocas se ajusta."""
     ajustes_csp = []
-
-    class LDAFalso:
-        def predict(self, X):
-            return np.zeros(len(X), dtype=int)
-
-        def predict_log_proba(self, X):
-            return np.zeros((len(X), N_ESTADIOS))
 
     def ajustar_csp(cov, estadios, par, n):
         ajustes_csp.append(estadios)
         return csp.FiltroCSP(par=par, pesos=np.eye(2 * n, cov.shape[1]))
 
-    monkeypatch.setattr(lda, "entrenar_lda", lambda X, y: LDAFalso())
-    monkeypatch.setattr(
-        hmm,
-        "estimar_transiciones",
-        lambda s, n: (np.full(n, 1 / n), np.full((n, n), 1 / n)),
-    )
-    monkeypatch.setattr(hmm, "viterbi", lambda e, i, t: np.full(len(e), 2))
     monkeypatch.setattr(csp, "ajustar_csp", ajustar_csp)
-    monkeypatch.setattr(
-        csp,
-        "aplicar_csp",
-        lambda cov, f: np.log(np.einsum("fc,ecd,fd->ef", f.pesos, cov, f.pesos)),
-    )
     return ajustes_csp
 
 
@@ -135,15 +115,19 @@ def test_modelo_ajusta_csp_sin_epocas_sin_anotar(etapas_c):
     modelo = ModeloEstadios(ConfigClasificacion()).ajustar([tabla])
 
     assert SIN_ANOTAR not in etapas_c[0]
-    assert len(modelo.nombres) == len(tabla.nombres) + 4
-    assert modelo.predecir(tabla).tolist() == [2] * 100
+    assert len(modelo.filtros_csp) == len(modelo.referencias_csp) == 1
+    prediccion = modelo.predecir(tabla)
+    assert prediccion.shape == (100,)
+    assert set(prediccion.tolist()) <= set(range(N_ESTADIOS))
 
 
-def test_modelo_sin_csp_ni_hmm(etapas_c):
-    cfg = ConfigClasificacion(grupos=("espectro", "hrv"), usar_hmm=False)
+def test_modelo_sin_csp_ni_suavizado(etapas_c):
+    cfg = ConfigClasificacion(grupos=("espectro", "perifericos"), suavizado="ninguno")
     tabla = tabla_sintetica(n_epocas=100)
     modelo = ModeloEstadios(cfg).ajustar([tabla])
 
     assert etapas_c == []
-    assert modelo.nombres == [n for n in tabla.nombres if n.split(".")[0] in cfg.grupos]
-    assert modelo.predecir(tabla).tolist() == [0] * 100
+    estadios, regla = modelo.clasificar_epocas(tabla)
+    np.testing.assert_array_equal(modelo.predecir(tabla), estadios)
+    # Sin husos ni ondas, N2 y N3 no pueden aparecer.
+    assert not np.isin(estadios, [2, 3]).any()

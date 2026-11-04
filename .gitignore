@@ -15,3 +15,17 @@ venv/
 .DS_Store
 .vscode/
 .idea/
+
+# LaTeX (el PDF final se sube a mano al entregar)
+informe/*.aux
+informe/*.bbl
+informe/*.bcf
+informe/*.blg
+informe/*.fdb_latexmk
+informe/*.fls
+informe/*.log
+informe/*.out
+informe/*.run.xml
+informe/*.synctex.gz
+informe/*.toc
+informe/main.pdf

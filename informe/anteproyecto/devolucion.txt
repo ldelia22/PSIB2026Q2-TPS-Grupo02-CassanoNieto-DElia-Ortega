@@ -1,0 +1,3 @@
+Hola chicos, está bien el tema del TPS. Les hago solo algunas sugerencias. Por un lado creo que la remoción de artefactos cardíacos quizás no es necesaria. Habría que ver si los artefactos son muy importantes como para que haga falta. Si bien son técnicas que no se usarían para hacer esa limpieza, estaría bien hacerla de esta forma como para el TP ya que no pueden usar técnicas avanzadas en caso de que sea necesario. Recuerden que para la clasificación no pueden usar técnicas de inteligencia artificial para el TP cuatrimestral, y podrán agregarlas recién para el final de la materia.
+
+Además dado que quizás pueden profundizar mucho en varios aspectos del trabajo, podrían evaluar obviar la parte de la segmentación y analizar directamente por ventanas de duración fija.

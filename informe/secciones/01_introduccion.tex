@@ -1,0 +1,22 @@
+\section{Introducción}
+% Base: sección 1 del anteproyecto. Pasar a pasado lo que ya se hizo.
+
+\subsection{Problemática}
+La polisomnografía (PSG) es el estudio de referencia para diagnosticar trastornos del sueño: durante una noche se registran en simultáneo EEG, EOG, EMG de mentón y ECG. Según el manual de la AASM~\cite{berry2017}, el registro se divide en épocas de \SI{30}{\second} y a cada una se le asigna uno de cinco estadios: vigilia (W), sueño ligero (N1 y N2), sueño profundo (N3) o sueño REM. La secuencia de estadios de toda la noche se denomina hipnograma.
+
+Esta clasificación la hace un técnico a mano, época por época, y el resultado depende de quién la haga. Entre técnicos de distintos centros se reportó $\kappa = 0{,}76$~\cite{dankerhopfe2009} y entre los técnicos del Haaglanden Medisch Centrum (HMC), $\kappa = 0{,}74$~\cite{alvarez2021}. N1 es el estadio en el que menos coinciden.
+
+\subsection{Marco teórico}
+\pendiente{Frente A y B: qué aporta cada señal y artefactos (anteproyecto §1.2).}
+
+\subsection{Estado del arte}
+\pendiente{Anteproyecto §1.3: descriptores + clasificador (YASA~\cite{vallat2021}) frente a redes profundas~\cite{alvarez2021}.}
+
+\subsection{Objetivos e hipótesis}
+\textbf{Objetivo general.} Desarrollar un algoritmo sin técnicas de inteligencia artificial que clasifique cada época de una PSG en uno de los cinco estadios, con decisiones explicables a partir de las señales, que alcance un acuerdo con los técnicos cercano al que tienen entre sí ($\kappa \approx 0{,}74$), junto con una interfaz gráfica que muestre cada etapa del procesamiento.
+
+\textbf{Hipótesis.}
+H1, el espectro multitaper varía menos que el de Welch entre épocas de un mismo estadio;
+H2, el promediado de Woody recupera la forma de la onda lenta con menor error que el promedio ordinario y ayuda a separar N2 de N3;
+H3, los descriptores CSP mejoran la clasificación de N1 y REM;
+H4, quitar los artefactos y agregar la HRV mejora el acuerdo con los técnicos.

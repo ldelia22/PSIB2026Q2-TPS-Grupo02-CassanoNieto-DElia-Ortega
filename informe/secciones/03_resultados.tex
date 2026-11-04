@@ -1,0 +1,75 @@
+\section{Resultados}
+% Figuras y tablas generadas por codigo/notebooks/03_frente_C_clasificacion.ipynb
+% y 04_frente_C_hipotesis.ipynb. Se guardan solas en figuras/.
+
+\subsection{Preprocesamiento y descriptores}
+\pendiente{Frentes A y B: resultados de las etapas 1 a 9.}
+
+\subsection{Clasificación}
+\pendiente{Comentar la distribución de estadios (\texttt{c\_distribucion\_estadios}) y los umbrales elegidos (\texttt{c\_eleccion\_umbrales}).}
+
+% \begin{figure}[htbp]
+%   \centering
+%   \includegraphics[width=\textwidth]{c_eleccion_umbrales}
+%   \caption{Histogramas de cada descriptor en los estadios que separa cada regla (pacientes de entrenamiento). Punteada: cruce de los histogramas; roja: umbral elegido.}
+%   \label{fig:umbrales}
+% \end{figure}
+
+\begin{table}[htbp]
+  \centering
+  \caption{Acuerdo con los técnicos sobre los \pendiente{14} pacientes de prueba.}
+  \label{tab:resultados}
+  \begin{tabular}{lcccccc}
+    \toprule
+    & $\kappa$ & F1 W & F1 N1 & F1 N2 & F1 N3 & F1 REM \\
+    \midrule
+    Reglas                  & -- & -- & -- & -- & -- & -- \\
+    Reglas + moda           & -- & -- & -- & -- & -- & -- \\
+    Reglas + continuidad    & -- & -- & -- & -- & -- & -- \\
+    \midrule
+    Técnicos HMC~\cite{alvarez2021}        & 0,74 & & & & & \\
+    Red de referencia~\cite{alvarez2021}   & 0,79 & & & & & \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+% \begin{figure}[htbp]
+%   \centering
+%   \includegraphics[width=\textwidth]{c_matrices_confusion}
+%   \caption{Matrices de confusión normalizadas por fila (estadio de los técnicos).}
+%   \label{fig:confusion}
+% \end{figure}
+
+% \begin{figure}[htbp]
+%   \centering
+%   \includegraphics[width=\textwidth]{c_hipnograma_SNxxx}
+%   \caption{Hipnograma de un paciente de prueba: técnicos, reglas y reglas con suavizado.}
+%   \label{fig:hipnograma}
+% \end{figure}
+
+% \begin{figure}[htbp]
+%   \centering
+%   \includegraphics[width=0.7\textwidth]{c_uso_reglas}
+%   \caption{Cantidad de épocas de prueba que decidió cada regla y fracción de aciertos.}
+%   \label{fig:uso_reglas}
+% \end{figure}
+
+\subsection{Verificación de hipótesis}
+
+\begin{table}[htbp]
+  \centering
+  \caption{Comparaciones paciente por paciente (Wilcoxon).}
+  \label{tab:hipotesis}
+  \begin{tabular}{llccc}
+    \toprule
+    & Medida & Variante A & Variante B & $p$ \\
+    \midrule
+    H1 & Variación entre épocas  & Multitaper: -- & Welch: --      & -- \\
+    H2 & Error de forma          & Woody: --      & Promedio: --   & -- \\
+    H3 & F1 de N1                & Con desempate: -- & Sin desempate: -- & -- \\
+       & F1 de REM               & Con desempate: -- & Sin desempate: -- & -- \\
+    H4 & Residuo cardíaco (\si{\micro\volt}) & Después: -- & Antes: -- & -- \\
+       & $\kappa$                & Con etapas: -- & Sin etapas: -- & -- \\
+    \bottomrule
+  \end{tabular}
+\end{table}
