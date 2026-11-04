@@ -2,12 +2,61 @@
 
 TP de Procesamiento de Señales e Imágenes Biomédicas (16.63), Grupo 2. Clasifica cada
 época de una polisomnografía en W, N1, N2, N3 o REM con decisiones explicables a partir
-de las señales. El detalle del método está en el anteproyecto.
+de las señales. El detalle del método está en el
+[anteproyecto](informe/anteproyecto/anteproyecto.pdf) y su
+[devolución](informe/anteproyecto/devolucion.txt).
+
+## Estructura del repo
+
+```
+codigo/                  Todo lo que se ejecuta (se instala con pip install -e)
+  src/estadios/          Paquete: un módulo por etapa del anteproyecto
+  notebooks/             Un notebook por frente; generan las figuras del informe
+  scripts/               Descarga, cálculo de descriptores, entrenamiento y evaluación
+  app/                   Interfaz en Streamlit (etapa 11)
+  tests/                 Especificación de cada frente
+informe/                 Informe final en LaTeX
+  main.tex               Une las secciones; compila en Overleaf o con latexmk
+  secciones/             Una por apartado; cada frente completa la suya
+  figuras/               Las escriben los notebooks (prefijo a_, b_, c_, h_)
+  anteproyecto/          Anteproyecto entregado y devolución de la cátedra
+```
+
+Los notebooks importan el paquete (no copian código): lo que se implementa en
+`src/estadios/` aparece solo en el notebook y en la interfaz. Cada uno guarda sus
+figuras en `informe/figuras/` con el prefijo de su frente, así el informe se
+actualiza al volver a correrlos.
+
+| Notebook | Frente | Contenido |
+|---|---|---|
+| `01_frente_A_senales.ipynb` | A | Etapas 1 a 5 |
+| `02_frente_B_descriptores.ipynb` | B | Etapas 6 a 9 |
+| `03_frente_C_clasificacion.ipynb` | C | Elección de umbrales, reglas, suavizado, métricas, hipnogramas |
+| `04_frente_C_hipotesis.ipynb` | C | H1 a H4 |
+
+## Clasificación: reglas en lugar de LDA + HMM
+
+El anteproyecto proponía LDA + HMM, pero la devolución aclara que la clasificación del
+TP cuatrimestral no puede usar técnicas de IA, y ambos lo son (se entrenan con épocas
+etiquetadas). Se reemplazaron por:
+
+1. **Reglas AASM** (`clasificacion/reglas.py`), evaluadas en orden sobre el percentil de
+   cada descriptor dentro de su noche: W (EMG y α altos), N3 (δ y ondas lentas), REM
+   (atonía, EOG o LF/HF altos, pocos husos), N2 (husos) y N1 por descarte.
+2. **Desempate N1/REM con CSP**: la época cambia de estadio solo si la potencia CSP queda
+   claramente del otro lado (H3).
+3. **Suavizado por reglas** (`clasificacion/suavizado.py`) en lugar del HMM: épocas
+   aisladas y REM mínimo, o filtro de moda.
+
+Los umbrales están en `ConfigClasificacion` y se eligen a mano con los histogramas de
+`03_frente_C_clasificacion.ipynb` (pacientes de entrenamiento). LDA y HMM quedan para el
+final de la materia. El detalle y la justificación están en la sección de métodos del
+informe.
 
 ## Cómo está dividido
 
 El trabajo se reparte en tres frentes. Cada uno entrega una estructura de datos al
-siguiente, definida en [`comun/contratos.py`](src/estadios/comun/contratos.py):
+siguiente, definida en [`comun/contratos.py`](codigo/src/estadios/comun/contratos.py):
 
 ```
 Registro ──► Frente A ──► RegistroPreprocesado ──► Frente B ──► TablaDescriptores ──► Frente C ──► hipnograma
@@ -17,10 +66,10 @@ Registro ──► Frente A ──► RegistroPreprocesado ──► Frente B �
 |---|---|---|---|
 | **A. Señales** | 1 a 5: exploratorio, filtrado, artefactos ocular y cardíaco, segmentación | `datos/`, `preprocesamiento/` | *a definir* |
 | **B. Descriptores** | 6 a 9: multitaper, husos, ondas lentas, Woody, CSP, EOG, EMG, HRV | `descriptores/` | *a definir* |
-| **C. Clasificación y resultados** | 10, 11 y sección 3: LDA, HMM, interfaz, métricas, H1 a H4 | `clasificacion/`, `evaluacion/`, `app/` | *a definir* |
+| **C. Clasificación y resultados** | 10, 11 y sección 3: reglas AASM, suavizado, interfaz, métricas, H1 a H4 | `clasificacion/`, `evaluacion/`, `app/` | *a definir* |
 
 Nadie tiene que esperar a otro frente, porque
-[`comun/sintetico.py`](src/estadios/comun/sintetico.py) genera datos falsos con la misma
+[`comun/sintetico.py`](codigo/src/estadios/comun/sintetico.py) genera datos falsos con la misma
 forma que los reales:
 
 | Frente | Trabaja con |
@@ -42,7 +91,7 @@ forma que los reales:
 | 7. Husos y ondas lentas | `descriptores/husos.py`, `ondas_lentas.py`, `woody.py` | H2 |
 | 8. CSP | `descriptores/csp.py` | H3 |
 | 9. EOG, EMG y HRV | `descriptores/perifericos.py`, `hrv.py` | H4 |
-| 10. LDA y HMM | `clasificacion/lda.py`, `hmm.py` | |
+| 10. Reglas AASM y suavizado | `clasificacion/reglas.py`, `suavizado.py`, `modelo.py` | H3 |
 | 11. Interfaz | `app/streamlit_app.py` | |
 | Evaluación | `evaluacion/metricas.py`, `hipotesis.py` | H1 a H4 |
 
@@ -50,22 +99,25 @@ forma que los reales:
 
 Contratos, configuración, datos sintéticos, carga de la base, descarga, partición por
 paciente, caché de descriptores y la conexión entre etapas (`pipeline.py`,
-`descriptores/ensamblado.py`, `clasificacion/modelo.py`). Todo lo demás lanza
+`descriptores/ensamblado.py`). Del Frente C: reglas, suavizado, modelo, métricas, la
+prueba de Wilcoxon, H3 y la parte de κ de H4. Todo lo demás lanza
 `NotImplementedError` y es lo que falta hacer.
 
 ## Puesta en marcha
 
-Requiere Python 3.10 o superior.
+Requiere Python 3.10 o superior. Todos los comandos se corren desde `codigo/`.
 
 ```bash
+cd codigo
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -e ".[dev]"
+pip install jupyter      # Para los notebooks
 pytest
 ```
 
 Los tests de lo que falta implementar figuran como `skipped`. Cada función tiene su
-test en `tests/test_frente_{a,b,c}.py`: al implementarla, el test empieza a correr solo
+test en `codigo/tests/test_frente_{a,b,c}.py`: al implementarla, el test empieza a correr solo
 y sirve de especificación. Para ver qué le falta a tu frente:
 
 ```bash
@@ -95,18 +147,19 @@ export ESTADIOS_DATOS="/Volumes/MiDisco/hmc"
 python scripts/calcular_descriptores.py    # Lento, pero queda en caché
 python scripts/entrenar_y_evaluar.py
 streamlit run app/streamlit_app.py
+jupyter lab notebooks/
 ```
 
 La interfaz arranca aun sin datos, con el registro sintético.
 
 ## Reglas de trabajo
 
-- **Contratos:** los cambios en `src/estadios/comun/` se acuerdan entre los tres, porque
+- **Contratos:** los cambios en `codigo/src/estadios/comun/` se acuerdan entre los tres, porque
   afectan a todos.
 - **Git:** una rama por tarea (`frente-a/filtrado`) y pull request contra `main`.
-- **Fuga de datos:** todo lo que se aprende de los datos (CSP, LDA, transiciones) se
-  ajusta solo con pacientes de entrenamiento. `ModeloEstadios` ya lo hace así.
-- **Parámetros:** van en [`comun/config.py`](src/estadios/comun/config.py), no fijos en
+- **Fuga de datos:** lo que se ajusta con datos (CSP) y la elección de los umbrales de
+  las reglas se hacen solo con pacientes de entrenamiento. `ModeloEstadios` ya lo hace así.
+- **Parámetros:** van en [`comun/config.py`](codigo/src/estadios/comun/config.py), no fijos en
   el código. Las hipótesis se prueban comparando configuraciones, y cada configuración
   tiene su propio caché.
 - **Unidades:** señales en µV, estadios como enteros, latidos como índices de muestra.
@@ -140,3 +193,15 @@ Surgieron al armar el esqueleto y contrastar el anteproyecto con la base.
 6. **Parámetros sin definir.** El anteproyecto no fija `nlms_orden`, `nlms_mu`,
    `wiener_orden`, `ventana_plantilla_s` ni `componentes_csp`. Los valores de `config.py`
    son provisorios y hay que ajustarlos.
+7. **Segmentación (devolución).** La cátedra sugiere evaluar si conviene omitir la
+   segmentación adaptativa y analizar directamente por ventanas fijas de 30 s.
+8. **Artefacto cardíaco (devolución).** Puede no ser necesario: el exploratorio
+   (promedio del EEG alrededor de cada latido) tiene que mostrar si es relevante antes
+   de implementar la remoción.
+9. **Sin inteligencia artificial (devolución).** Resuelta: LDA y HMM se reemplazaron
+   por reglas AASM y suavizado por reglas (ver arriba). Esto cambió
+   `ConfigClasificacion` en `comun/config.py` (se fue `usar_hmm`; se agregaron los
+   umbrales y el tipo de suavizado), que no afecta la huella del caché de descriptores.
+10. **Fracción de ondas lentas (Frente B).** La AASM define N3 por ondas lentas en
+    ≥ 20 % de la época. Hoy la regla usa `ondas.cantidad`; un descriptor
+    `ondas.fraccion` (tiempo con ondas lentas sobre 30 s) la haría más fiel al manual.

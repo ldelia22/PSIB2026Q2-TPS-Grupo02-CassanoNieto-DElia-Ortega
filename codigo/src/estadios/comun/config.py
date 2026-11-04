@@ -56,10 +56,47 @@ class ConfigDescriptores:
 
 @dataclass(frozen=True)
 class ConfigClasificacion:
+    """Clasificador por reglas AASM (etapa 10). Reemplaza al LDA + HMM del anteproyecto,
+    porque la cátedra no permite técnicas de IA en la clasificación del TP cuatrimestral.
+
+    Los umbrales están en percentiles del propio registro (0 a 100): "EMG <= 30" quiere
+    decir "en el 30 % más bajo de esa noche". Son provisorios: se eligen mirando los
+    histogramas de `notebooks/03_frente_C_clasificacion.ipynb` con los pacientes de
+    entrenamiento y se copian acá.
+    """
+
+    # Grupos de descriptores que pueden usar las reglas. Sacar "csp" o "hrv" apaga la
+    # regla que los usa (H3 y H4).
     grupos: tuple[str, ...] = GRUPOS_DESCRIPTORES
+
+    # Canal de cada descriptor espectral (si la tabla no lo tiene, se usa el que haya).
+    canal_alfa: str = "o2"
+    canal_delta: str = "f4"
+
+    # W: EMG alto y alfa alto.
+    w_emg_min: float = 60.0
+    w_alfa_min: float = 60.0
+    # N3: delta alto y muchas ondas lentas.
+    n3_delta_min: float = 70.0
+    n3_ondas_min: float = 70.0
+    # REM: atonía, movimientos oculares (o LF/HF alto si se usa la HRV) y pocos husos.
+    r_emg_max: float = 35.0
+    r_eog_min: float = 60.0
+    r_lf_hf_min: float = 75.0
+    r_husos_max: float = 50.0
+    # N2: husos.
+    n2_husos_min: float = 50.0
+
+    # CSP: desempata N1/REM cuando la potencia CSP está lejos del punto medio entre los
+    # dos estadios (en rangos intercuartiles).
     pares_csp: tuple[tuple[int, int], ...] = ((1, 4),)  # (N1, R)
     componentes_csp: int = 2  # Por extremo: se usan 2 * componentes_csp filtros.
-    usar_hmm: bool = True
+    csp_margen: float = 1.0
+
+    # Suavizado temporal (reemplaza al HMM).
+    suavizado: Literal["reglas", "moda", "ninguno"] = "reglas"
+    rem_min_epocas: int = 2
+    ventana_moda: int = 5
 
 
 @dataclass(frozen=True)

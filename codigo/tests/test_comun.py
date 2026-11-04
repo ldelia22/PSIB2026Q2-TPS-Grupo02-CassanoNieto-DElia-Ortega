@@ -92,9 +92,9 @@ def test_huella_cambia_con_el_preprocesamiento_pero_no_con_el_clasificador():
     sin_ocular = replace(
         base, preprocesamiento=replace(base.preprocesamiento, remover_ocular=False)
     )
-    sin_hmm = replace(base, clasificacion=ConfigClasificacion(usar_hmm=False))
+    sin_suavizado = replace(base, clasificacion=ConfigClasificacion(suavizado="ninguno"))
     assert base.huella_descriptores() != sin_ocular.huella_descriptores()
-    assert base.huella_descriptores() == sin_hmm.huella_descriptores()
+    assert base.huella_descriptores() == sin_suavizado.huella_descriptores()
 
 
 def test_sinteticos_respetan_los_contratos():
