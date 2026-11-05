@@ -206,3 +206,12 @@ def test_h4_residuo_compara_antes_y_despues(monkeypatch):
     resultado = hipotesis.h4_residuo_cardiaco([p.registro for p in preps], cfg)
     assert (resultado.variante_a == 0).all()
     assert (resultado.variante_b > 0).all()
+
+
+def test_referencia_csp_usa_el_ancho_de_cada_estadio():
+    rng = np.random.default_rng(0)
+    puntaje = np.r_[rng.normal(2, 0.5, 500), rng.normal(-2, 0.5, 500)]
+    estadios = np.r_[np.full(500, N1), np.full(500, R)]
+    centro, escala = reglas.referencia_csp(puntaje, estadios, (N1, R))
+    assert abs(centro) < 0.2
+    assert 0.5 < escala < 0.9  # Rango intercuartil de una normal de desvío 0,5: ~0,67.

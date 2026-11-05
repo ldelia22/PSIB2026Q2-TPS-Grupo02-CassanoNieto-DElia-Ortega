@@ -49,7 +49,20 @@ etiquetadas). Se reemplazaron por:
    aisladas y REM mínimo, o filtro de moda.
 
 Los umbrales están en `ConfigClasificacion` y se eligen a mano con los histogramas de
-`03_frente_C_clasificacion.ipynb` (pacientes de entrenamiento). LDA y HMM quedan para el
+`03_frente_C_clasificacion.ipynb` (pacientes de entrenamiento).
+
+Unidades: cada paciente tiene una noche (~8 h), dividida en ~960 épocas de 30 s; se
+clasifica cada época. El flujo es:
+
+| Paso | Con qué pacientes | Cuántas veces |
+|---|---|---|
+| 1. Calcular descriptores | Todos los elegidos | Una vez por paciente (queda en caché) |
+| 2. Elegir los umbrales | Entrenamiento, todos juntos en los histogramas | Una sola vez |
+| 3. Clasificar | Cada paciente por separado | Una vez por paciente |
+| 4. Evaluar (κ global y por paciente) | Prueba | Al final |
+
+El percentil de cada época se calcula dentro de su noche; el histograma junta las épocas
+de todas las noches de entrenamiento. El detalle está al principio del notebook 03. LDA y HMM quedan para el
 final de la materia. El detalle y la justificación están en la sección de métodos del
 informe.
 

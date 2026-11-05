@@ -135,13 +135,18 @@ def puntaje_csp(log_potencias: np.ndarray) -> np.ndarray:
 
 
 def referencia_csp(puntaje: np.ndarray, estadios: np.ndarray, par: tuple[int, int]) -> tuple[float, float]:
-    """Punto medio entre las medianas del puntaje CSP de los dos estadios y su dispersión
-    (rango intercuartil). Se calcula con las mismas épocas de entrenamiento que los
-    filtros CSP, como parte de la etapa 8."""
+    """Punto medio entre las medianas del puntaje CSP de los dos estadios y el ancho
+    típico de cada uno (promedio de sus rangos intercuartiles). Se calcula con las mismas
+    épocas de entrenamiento que los filtros CSP, como parte de la etapa 8.
+
+    El ancho se mide dentro de cada estadio y no con los dos juntos: mezclados, el rango
+    intercuartil queda del tamaño de la distancia entre los grupos y casi ninguna época
+    superaría el margen.
+    """
     a, b = puntaje[estadios == par[0]], puntaje[estadios == par[1]]
     centro = (np.median(a) + np.median(b)) / 2
-    q75, q25 = np.percentile(np.r_[a, b], [75, 25])
-    return float(centro), float(max(q75 - q25, np.finfo(float).eps))
+    escala = np.mean([np.subtract(*np.percentile(x, [75, 25])) for x in (a, b)])
+    return float(centro), float(max(escala, np.finfo(float).eps))
 
 
 def desempatar_con_csp(
