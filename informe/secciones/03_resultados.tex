@@ -3,7 +3,9 @@
 % y 04_frente_C_hipotesis.ipynb. Se guardan solas en figuras/.
 
 \subsection{Preprocesamiento y descriptores}
-\textbf{Línea eléctrica y filtrado.} El pico en \SI{50}{\hertz} superó los \SI{3}{\decibel} en el 95\,\% de los pares paciente y canal (mediana \SI{17,5}{\decibel}), mientras que en \SI{60}{\hertz} la mediana fue de \SI{0,1}{\decibel} (Fig.~\ref{fig:linea}), por lo que el notch se fijó en \SI{50}{\hertz}. Con un pasa-altos de \SI{0,5}{\hertz}, una onda de \SI{-80}{\micro\volt} se reducía a \SI{-57}{\micro\volt} y quedaba debajo del umbral de detección; con \SI{0,2}{\hertz} conservó \SI{-72}{\micro\volt}.
+\textbf{Línea eléctrica y filtrado.} El pico en \SI{50}{\hertz} superó los \SI{3}{\decibel} en el 95\,\% de los pares paciente y canal (mediana \SI{17,5}{\decibel}), mientras que en \SI{60}{\hertz} la mediana fue de \SI{0,1}{\decibel} (Fig.~\ref{fig:linea}), por lo que el notch se fijó en \SI{50}{\hertz}. Con un pasa-altos de \SI{0,5}{\hertz}, una onda de \SI{-80}{\micro\volt} se reducía a \SI{-57}{\micro\volt} y quedaba debajo del umbral de detección, mientras que con \SI{0,2}{\hertz} conservó \SI{-72}{\micro\volt}. Los registros que el equipo filtró con un pasa-bajos de \SI{35}{\hertz} y los que filtró con uno de \SI{128}{\hertz} difirieron en \SI{0,3}{\decibel} a \SI{30}{\hertz}, donde terminan las bandas de los descriptores, por lo que se trataron todos igual.
+
+\textbf{Saturación.} En el paciente mediano solo el 0,05\,\% de las muestras de EEG llegó al borde del rango, pero eso alcanzó para afectar al 2,6\,\% de las épocas, tomando el canal más afectado de cada paciente. El peor caso fue SN020, con el 37\,\% de las épocas. No se descartaron épocas, porque hay que clasificarlas todas, pero los tramos de más de \SI{500}{\micro\volt} quedaron fuera del ajuste del filtro ocular y de la plantilla cardíaca.
 
 \begin{figure}[htbp]
   \centering
@@ -32,7 +34,7 @@
 
 \textbf{Segmentación.} La marca de no estacionariedad abarcó el 10\,\% de las épocas de entrenamiento, con 25\,\% en W y 3\,\% en N3, y fue más frecuente en las épocas de transición entre estadios (17,5\,\% contra 7,5\,\%). En las épocas marcadas el clasificador acertó el 28\,\% contra el 45\,\% de las no marcadas. Un tercio de las épocas marcadas de W, N1, N2 y REM se clasificó como N3, porque la regla de N3 tomó las deflexiones grandes como ondas lentas.
 
-\textbf{HRV.} El cociente LF/HF fue menor en N3 y mayor en REM, como se esperaba (percentiles medianos 25 y 70 dentro de la noche).
+\textbf{Latidos y HRV.} En los 12 pacientes analizados, Pan-Tompkins detectó entre 24\,700 y 37\,900 latidos por noche, con RR medianos entre 0,69 y \SI{1,06}{\second}. El descarte por forma sacó una mediana del 4,9\,\% de los latidos, y después de filtrar los intervalos se conservó al menos el 90\,\% en 10 de los 12 pacientes. La excepción fue SN001, con el 47\,\%, porque tiene un ritmo muy irregular. El 24\,\% de sus intervalos es más de un 20\,\% más corto que el de sus vecinos, contra una mediana del 1,8\,\% en los demás. El cociente LF/HF fue menor en N3 y mayor en REM, como se esperaba, con percentiles medianos de 25 y 70 dentro de la noche. HF bajó en REM pero no subió en N3, por lo que la regla de REM usa el cociente.
 
 \pendiente{Frente B: resultados de las etapas 6 a 9.}
 

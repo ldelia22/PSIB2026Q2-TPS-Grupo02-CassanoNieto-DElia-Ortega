@@ -3,6 +3,12 @@
 
 \textbf{Reglas frente a LDA + HMM.} Al reemplazar el LDA y el HMM por reglas fijas se resignó parte del acuerdo esperable: un clasificador supervisado pondera todos los descriptores a la vez, mientras que cada regla usa solo dos o tres. A cambio, cada época queda explicada por una regla concreta (Fig.~\pendiente{ref}), con umbrales que tienen interpretación fisiológica y que no dependen de un entrenamiento. \pendiente{Discutir qué reglas aciertan menos y por qué, en particular N1, que se asigna por descarte y es también el estadio en que menos coinciden los técnicos.}
 
-\pendiente{Frente B, interpretación de H1, H2 y H3. Se completará cuando se complete A.}
+\textbf{Preprocesamiento.} Cada parámetro del preprocesamiento salió de una medición sobre los pacientes de entrenamiento, y dos de esas mediciones cambiaron lo que proponía el anteproyecto. El pasa-altos tuvo que bajar a \SI{0,2}{\hertz} para no perder ondas lentas. Y la corrección ocular aplicada a toda la noche borraba ondas lentas reales en N3, porque E1$-$E2 también registra actividad cerebral, lo que obligó a agregar la compuerta. La remoción cardíaca, que la cátedra puso en duda, resultó relevante por un motivo que no era evidente. El artefacto tiene la misma amplitud toda la noche, pero pesa más en REM, donde el EEG es más chico, y sin quitarlo REM se parece más a W y a N2 en las bandas alfa y sigma.
 
-\pendiente{Limitaciones: umbrales elegidos con una sola partición, épocas fuera del período de sueño, saturación, cantidad de registros.}
+La marca de no estacionariedad mostró una fuente concreta de error del clasificador. Un tercio de las épocas marcadas de W, N1, N2 y REM se clasificó como N3, porque los movimientos y los despertares producen deflexiones grandes y lentas que la regla de N3 cuenta como ondas lentas. Una mejora posible es no asignar N3 a las épocas marcadas, o contar las ondas solo en los tramos estables de la época.
+
+El preprocesamiento tiene cuatro limitaciones. El equipo aplicó un pasa-bajos de \SI{35}{\hertz} en 27 de los 56 pacientes de entrenamiento y de \SI{128}{\hertz} en el resto, lo que puede correr la pendiente espectral de un grupo respecto del otro. SN020 tiene más de un tercio de sus épocas saturadas, y la HRV de SN001 es poco confiable por su ritmo irregular. Por último, en W se siguen detectando ondas lentas que probablemente sean movimientos del cuerpo que el EOG no registra.
+
+\pendiente{Frente B, interpretación de H1, H2 y H3.}
+
+\pendiente{Limitaciones: umbrales elegidos con una sola partición, épocas fuera del período de sueño, cantidad de registros.}
