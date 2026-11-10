@@ -13,7 +13,7 @@ codigo/                  Todo lo que se ejecuta (se instala con pip install -e)
   src/estadios/          Paquete: un módulo por etapa del anteproyecto
   notebooks/             Un notebook por frente; generan las figuras del informe
   scripts/               Descarga, cálculo de descriptores, entrenamiento y evaluación
-  app/                   Interfaz en Streamlit (etapa 11)
+  app/                   Interfaz de escritorio con Tkinter (etapa 11)
   tests/                 Especificación de cada frente
 informe/                 Informe final en LaTeX
   main.tex               Une las secciones; compila en Overleaf o con latexmk
@@ -114,7 +114,7 @@ forma que los reales:
 | 9. EOG y EMG | `descriptores/perifericos.py` | |
 | 9. HRV (Frente A) | `descriptores/hrv.py` | H4 |
 | 10. Reglas AASM y suavizado | `clasificacion/reglas.py`, `suavizado.py`, `modelo.py` | H3 |
-| 11. Interfaz | `app/streamlit_app.py` | |
+| 11. Interfaz | `app/interfaz.py` | |
 | Evaluación | `evaluacion/metricas.py`, `hipotesis.py` | H1 a H4 |
 
 ### Qué ya funciona
@@ -172,11 +172,13 @@ export ESTADIOS_DATOS="/Volumes/MiDisco/hmc"
 ```bash
 python scripts/calcular_descriptores.py    # Lento, pero queda en caché
 python scripts/entrenar_y_evaluar.py
-python -m streamlit run app/streamlit_app.py
+python app/interfaz.py
 jupyter lab notebooks/
 ```
 
-La interfaz arranca aun sin datos, con el registro sintético.
+La interfaz abre una ventana de escritorio y arranca aun sin datos, con el registro
+sintético. Usa Tkinter, que viene con Python en Windows y macOS. En Linux se instala con
+el paquete `python3-tk` del sistema.
 
 ## Reglas de trabajo
 

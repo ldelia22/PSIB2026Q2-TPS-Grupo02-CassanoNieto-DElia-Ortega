@@ -14,7 +14,6 @@ dependencies = [
     "matplotlib",
     "mne",
     "numba",
-    "streamlit",
 ]
 
 [project.optional-dependencies]
