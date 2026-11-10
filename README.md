@@ -82,12 +82,12 @@ Registro ──► Frente A ──► RegistroPreprocesado ──► Frente B �
 
 | Frente | Etapas | Carpetas | Responsable |
 |---|---|---|---|
-| **A. Señales** | 1 a 5: exploratorio, filtrado, artefactos ocular y cardíaco, segmentación. También la HRV de la etapa 9 | `datos/`, `preprocesamiento/`, `descriptores/hrv.py` | *a definir* |
+| **A. Señales** | 1 a 5: exploratorio, filtrado, artefactos ocular y cardíaco, QRS, segmentación. También la HRV de la etapa 9 | `datos/`, `preprocesamiento/`, `descriptores/hrv.py` | Cassano Nieto |
 | **B. Descriptores** | 6 a 9: multitaper, husos, ondas lentas, Woody, CSP, EOG, EMG | `descriptores/` (salvo `hrv.py`) | *a definir* |
+| **C. Clasificación y resultados** | 10, 11 y sección 3: reglas AASM, suavizado, interfaz, métricas, H1 a H4 | `clasificacion/`, `evaluacion/`, `app/` | *a definir* |
 
 La HRV es del Frente A porque se calcula con los latidos que detecta `qrs.py`. El
 archivo queda en `descriptores/` porque su salida es un descriptor más de la tabla.
-| **C. Clasificación y resultados** | 10, 11 y sección 3: reglas AASM, suavizado, interfaz, métricas, H1 a H4 | `clasificacion/`, `evaluacion/`, `app/` | *a definir* |
 
 Nadie tiene que esperar a otro frente, porque
 [`comun/sintetico.py`](codigo/src/estadios/comun/sintetico.py) genera datos falsos con la misma
@@ -119,12 +119,10 @@ forma que los reales:
 
 ### Qué ya funciona
 
-Contratos, configuración, datos sintéticos, carga de la base, descarga, partición por
-paciente, caché de descriptores y la conexión entre etapas (`pipeline.py`,
-`descriptores/ensamblado.py`). Del Frente C: reglas, suavizado, modelo, métricas, la
-prueba de Wilcoxon, H1, H2, H3, la parte de κ de H4 y la interfaz (las pestañas que
-dependen del Frente A avisan qué falta). Todo lo demás lanza
-`NotImplementedError` y es lo que falta hacer.
+Las tres partes están implementadas y pasan sus tests. El Frente A ya corre sobre los
+registros reales y sus decisiones están justificadas en
+`notebooks/01_frente_A_senales.ipynb`. Falta elegir los umbrales de las reglas con
+datos reales y verificar H1 a H4 sobre ellos.
 
 ## Puesta en marcha
 
@@ -141,7 +139,8 @@ pytest
 `requirements.txt` instala las dependencias, pytest, Jupyter y el paquete del TP. Las
 mismas dependencias figuran en `pyproject.toml`, así que `pip install -e ".[dev]"` también
 funciona. No se usa ninguna librería de aprendizaje automático: la devolución no lo
-permite en el TP cuatrimestral.
+permite en el TP cuatrimestral. En Windows, con PowerShell, el entorno se activa con
+`.venv\Scripts\Activate.ps1`.
 
 Los tests de lo que falta implementar figuran como `skipped`. Cada función tiene su
 test en `codigo/tests/test_frente_{a,b,c}.py`: al implementarla, el test empieza a correr solo
@@ -203,28 +202,26 @@ La interfaz arranca aun sin datos, con el registro sintético.
 
 Surgieron al armar el esqueleto y contrastar el anteproyecto con la base.
 
-1. **Pasa-altos y ondas lentas.** La etapa 2 filtra a 0,5 Hz, pero la etapa 7 detecta
-   ondas lentas entre 0,2 y 4 Hz: la parte de 0,2 a 0,5 Hz ya no llega. Se puede bajar el
-   pasa-altos o detectar las ondas sobre la señal sin ese filtro.
+1. **Pasa-altos y ondas lentas.** Resuelta. El pasa-altos del EEG bajó a 0,2 Hz para no
+   recortar la banda en la que se detectan las ondas lentas.
 2. **Cantidad de registros.** El anteproyecto dice 148 PSG, pero la v1.1 publica 151 (no
    existen SN014, SN064 ni SN135). No cambia el método, sí el texto del informe.
 3. **Épocas fuera del período de sueño.** Las anotaciones incluyen vigilia antes de
    apagar y después de prender las luces. Esas épocas son fáciles de clasificar y pueden
    inflar κ. Hay que decidir si se evalúa toda la grabación o solo entre
    `luces_apagadas_s` y `luces_encendidas_s`.
-4. **Épocas no estacionarias.** La etapa 5 las marca y quedan en la tabla, pero nada las
-   usa todavía. Hay que decidir si se excluyen del entrenamiento o solo se informan.
-5. **Saturación.** Los EEG y EOG de SN001 llegan a ±800 µV, el límite del rango del
-   equipo. El exploratorio tendría que medir cuánto ocurre, porque esos tramos afectan al
-   filtro adaptativo y a la detección de ondas lentas.
-6. **Parámetros sin definir.** El anteproyecto no fija `nlms_orden`, `nlms_mu`,
-   `wiener_orden`, `ventana_plantilla_s` ni `componentes_csp`. Los valores de `config.py`
-   son provisorios y hay que ajustarlos.
-7. **Segmentación (devolución).** La cátedra sugiere evaluar si conviene omitir la
-   segmentación adaptativa y analizar directamente por ventanas fijas de 30 s.
-8. **Artefacto cardíaco (devolución).** Puede no ser necesario: el exploratorio
-   (promedio del EEG alrededor de cada latido) tiene que mostrar si es relevante antes
-   de implementar la remoción.
+4. **Épocas no estacionarias.** Resuelta. La etapa 5 las marca y quedan en la tabla, pero
+   las reglas no las usan y no se excluyen de la evaluación. El notebook 01 muestra que el
+   clasificador acierta menos en ellas y que un tercio de las marcadas de W, N1, N2 y REM
+   se clasifica como N3, algo a revisar en la regla de N3.
+5. **Saturación.** Medida en el notebook 01. Los tramos que superan 500 µV no participan
+   del ajuste del filtro ocular ni de la plantilla cardíaca. Las épocas siguen en la tabla.
+6. **Parámetros sin definir.** Los de preprocesamiento se eligieron en el notebook 01.
+   Sigue pendiente `componentes_csp`.
+7. **Segmentación (devolución).** Resuelta. El análisis se hace por ventanas fijas de
+   30 s y la marca de no estacionariedad con modelo AR queda solo como información.
+8. **Artefacto cardíaco (devolución).** Resuelta. El promedio alrededor de cada latido
+   muestra un artefacto relevante, por lo que la remoción queda activa.
 9. **Sin inteligencia artificial (devolución).** Resuelta: LDA y HMM se reemplazaron
    por reglas AASM y suavizado por reglas (ver arriba). Esto cambió
    `ConfigClasificacion` en `comun/config.py` (se fue `usar_hmm`; se agregaron los
