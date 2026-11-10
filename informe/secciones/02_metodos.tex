@@ -6,12 +6,22 @@ Se usó la HMC Sleep Staging Database v1.1~\cite{alvarez2022}, con 151 PSG de ad
 
 % ---------------------------------------------------------------- Frente A
 \subsection{Preprocesamiento}
-\pendiente{Frente A: etapas 1 a 5. Figuras de \texttt{01\_frente\_A\_senales.ipynb} (prefijo \texttt{a\_}).}
+El EEG es la señal principal del trabajo; el EOG y el ECG se usaron para limpiarlo y el ECG, además, para calcular la HRV. Cada parámetro se eligió a partir de los pacientes de entrenamiento.
+
 \subsubsection{Análisis exploratorio}
+Antes de diseñar los filtros se midió, en el espectro crudo de cada canal, cuánto sobresalen 50 y \SI{60}{\hertz} respecto de las frecuencias vecinas, ya que la frecuencia de la línea eléctrica depende del lugar de registro. Del encabezado EDF se leyó el rango físico de cada canal, \SI{\pm800}{\micro\volt} en el EEG, que es el valor máximo que puede tomar la señal, y los filtros del equipo, un pasa-altos de \SI{0,2}{\hertz} en todos los registros y un pasa-bajos de \SI{35}{\hertz} o \SI{128}{\hertz} según el registro. También se midió la fracción de épocas con al menos una muestra en el borde de ese rango, la correlación de cada EEG con la diferencia E1$-$E2 por estadio y el promedio del EEG sincronizado con los latidos, que revela el artefacto cardíaco porque el EEG, al no estar sincronizado con el corazón, se cancela.
+
 \subsubsection{Filtrado}
+El EEG y el EOG se filtraron con un pasa-altos de \SI{0,2}{\hertz}, un pasa-bajos de \SI{45}{\hertz} y un notch de \SI{50}{\hertz}. El pasa-altos se bajó respecto de los \SI{0,5}{\hertz} del anteproyecto porque las ondas lentas se detectan desde \SI{0,2}{\hertz}. El pasa-bajos atenúa \SI{0,2}{\decibel} en \SI{30}{\hertz}, donde terminan las bandas de los descriptores, y \SI{2,4}{\decibel} en \SI{40}{\hertz}, el extremo de la pendiente espectral. En \SI{50}{\hertz} atenúa solo \SI{11,8}{\decibel}, por lo que la línea la elimina el notch. Subir el corte a \SI{50}{\hertz} cambió los descriptores de las reglas en \SI{0,1}{\percent} o menos. El EMG llevó un pasa-altos de \SI{10}{\hertz} y el notch. Se compararon un IIR Butterworth de orden 4, aplicado hacia adelante y hacia atrás para anular el desfase, y un FIR con ventana de Hamming; se adoptó el primero.
+
 \subsubsection{Remoción del artefacto ocular}
+Se usó E1$-$E2 como referencia y se compararon NLMS y el filtro de Wiener. Como la referencia también contiene ondas lentas cerebrales, se agregó una compuerta, de modo que el filtro se ajusta y se aplica solo donde el valor eficaz del EOG en \SI{2}{\second} supera el doble de su mediana en la noche. Las variantes se compararon en F4, el canal más contaminado y el que usan las reglas de N3, midiendo por estadio la potencia delta y las ondas lentas detectadas, que deberían bajar en W y REM y no cambiar en N3.
+
 \subsubsection{Remoción del artefacto cardíaco}
+Los latidos se detectaron con Pan-Tompkins. Para comprobar si el artefacto era relevante, como sugirió la cátedra, se promedió el EEG entre \SI{-0,2}{\second} y \SI{0,6}{\second} alrededor de cada onda R. La actividad cerebral no está sincronizada con el latido y se cancela al promediar, mientras que el artefacto se conserva. Como control se repitió el promedio en instantes al azar. Para removerlo, en cada latido se restó una plantilla igual al promedio de los 30 latidos anteriores, excluyendo las ventanas de más de \SI{500}{\micro\volt} pico a pico.
+
 \subsubsection{Segmentación}
+Siguiendo la devolución de la cátedra, se analizaron épocas fijas de \SI{30}{\second}, la unidad del hipnograma. Para identificar las épocas que mezclan dos estados se ajustó un modelo autorregresivo de orden 8 (Yule-Walker) en los primeros \SI{5}{\second} de cada época de C4 y se aplicó sin cambios a los cinco tramos de \SI{5}{\second} siguientes. La época se marcó como no estacionaria si el error de predicción de algún tramo superaba 4 veces al del primero. La marca no interviene en la clasificación.
 
 % ---------------------------------------------------------------- Frente B
 \subsection{Descriptores}

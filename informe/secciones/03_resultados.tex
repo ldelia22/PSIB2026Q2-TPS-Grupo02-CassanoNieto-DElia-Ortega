@@ -3,9 +3,38 @@
 % y 04_frente_C_hipotesis.ipynb. Se guardan solas en figuras/.
 
 \subsection{Preprocesamiento y descriptores}
-\pendiente{Frente A: resultados de las etapas 1 a 5.}
+\textbf{Línea eléctrica y filtrado.} El pico en \SI{50}{\hertz} superó los \SI{3}{\decibel} en el 95\,\% de los pares paciente y canal (mediana \SI{17,5}{\decibel}), mientras que en \SI{60}{\hertz} la mediana fue de \SI{0,1}{\decibel} (Fig.~\ref{fig:linea}), por lo que el notch se fijó en \SI{50}{\hertz}. Con un pasa-altos de \SI{0,5}{\hertz}, una onda de \SI{-80}{\micro\volt} se reducía a \SI{-57}{\micro\volt} y quedaba debajo del umbral de detección; con \SI{0,2}{\hertz} conservó \SI{-72}{\micro\volt}.
 
-\pendiente{Frente B, descriptores de las etapas 6 a 9. Se completará cuando se complete A.}
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.9\textwidth]{a_linea_electrica}
+  \caption{Espectro crudo de un paciente (izquierda) y prominencia de 50 y \SI{60}{\hertz} en los pacientes de entrenamiento (derecha).}
+  \label{fig:linea}
+\end{figure}
+
+\textbf{Artefacto ocular.} Corregir toda la noche redujo un 6,5\,\% (Wiener) y un 14\,\% (NLMS) las ondas lentas detectadas en N3. Wiener con compuerta conservó N3 (de 5018 a 4994 ondas, en 12 pacientes) y redujo un 19\,\% las detecciones en REM, que eran movimientos oculares (Fig.~\ref{fig:ondas}). NLMS con compuerta aumentó la potencia delta en W y N1, por lo que se adoptó Wiener.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.6\textwidth]{a_ondas_por_estadio}
+  \caption{Ondas lentas detectadas en F4 por estadio, antes y después de la corrección ocular.}
+  \label{fig:ondas}
+\end{figure}
+
+\textbf{Artefacto cardíaco.} El promedio sincronizado mostró el QRS y la onda T en los 12 pacientes analizados (Fig.~\ref{fig:cardiaco}). En F4 su amplitud mediana fue de \SI{17}{\micro\volt} pico a pico, unas 40 veces la del control con instantes al azar (\SI{0,4}{\micro\volt}), lo que responde a la duda planteada en la devolución. C3, referido a M2, tuvo la mitad de artefacto que los canales referidos a M1. La remoción lo redujo a \SI{1,6}{\micro\volt} (91\,\%) sin cambiar la potencia delta, y quitó más potencia en REM que en W, con \SI{0,55}{\decibel} contra \SI{0,06}{\decibel} en alfa de O2 y \SI{0,62}{\decibel} contra \SI{0,16}{\decibel} en sigma de C4.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth]{a_promedio_latidos}
+  \caption{Promedio de F4 alrededor de cada latido antes y después de la remoción, y en instantes al azar como control.}
+  \label{fig:cardiaco}
+\end{figure}
+
+\textbf{Segmentación.} La marca de no estacionariedad abarcó el 10\,\% de las épocas de entrenamiento, con 25\,\% en W y 3\,\% en N3, y fue más frecuente en las épocas de transición entre estadios (17,5\,\% contra 7,5\,\%). En las épocas marcadas el clasificador acertó el 28\,\% contra el 45\,\% de las no marcadas. Un tercio de las épocas marcadas de W, N1, N2 y REM se clasificó como N3, porque la regla de N3 tomó las deflexiones grandes como ondas lentas.
+
+\textbf{HRV.} El cociente LF/HF fue menor en N3 y mayor en REM, como se esperaba (percentiles medianos 25 y 70 dentro de la noche).
+
+\pendiente{Frente B: resultados de las etapas 6 a 9.}
 
 \subsection{Clasificación}
 \pendiente{Comentar la distribución de estadios (\texttt{c\_distribucion\_estadios}) y los umbrales elegidos (\texttt{c\_eleccion\_umbrales}).}
