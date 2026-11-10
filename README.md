@@ -129,10 +129,14 @@ Requiere Python 3.10 o superior. Todos los comandos se corren desde `codigo/`.
 cd codigo
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -e ".[dev]"
-pip install jupyter      # Para los notebooks
+pip install -r requirements.txt
 pytest
 ```
+
+`requirements.txt` instala las dependencias, pytest, Jupyter y el paquete del TP. Las
+mismas dependencias figuran en `pyproject.toml`, así que `pip install -e ".[dev]"` también
+funciona. No se usa ninguna librería de aprendizaje automático: la devolución no lo
+permite en el TP cuatrimestral.
 
 Los tests de lo que falta implementar figuran como `skipped`. Cada función tiene su
 test en `codigo/tests/test_frente_{a,b,c}.py`: al implementarla, el test empieza a correr solo

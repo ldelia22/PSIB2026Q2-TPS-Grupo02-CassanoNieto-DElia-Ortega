@@ -13,7 +13,6 @@ dependencies = [
     "pandas",
     "matplotlib",
     "mne",
-    "scikit-learn",
     "streamlit",
 ]
 

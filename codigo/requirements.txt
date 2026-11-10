@@ -1,0 +1,15 @@
+# Dependencias del proyecto. Las mismas que pyproject.toml, con las versiones con que
+# se desarrolló. Se instalan desde codigo/ con: pip install -r requirements.txt
+numpy>=2.5
+scipy>=1.18
+pandas>=3.1
+matplotlib>=3.11
+mne>=1.13
+streamlit>=1.66
+
+# Tests y notebooks
+pytest>=9.2
+jupyter
+
+# El paquete del TP, en modo editable
+-e .
