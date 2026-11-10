@@ -4,7 +4,8 @@ import numpy as np
 import pytest
 
 from estadios.comun.config import ConfigDescriptores, ConfigPreprocesamiento
-from estadios.comun.constantes import ECG
+from estadios.comun.constantes import CANALES, CANALES_EEG, ECG, EEG_F4, EMG, EOG_E1, EOG_E2
+from estadios.comun.contratos import Registro
 from estadios.comun.sintetico import preprocesado_sintetico, registro_sintetico
 from estadios.descriptores import hrv
 from estadios.preprocesamiento import cardiaco, exploratorio, filtrado, ocular, qrs, segmentacion
@@ -101,11 +102,90 @@ def test_promedio_alrededor_de_latidos_recupera_la_forma():
     assert promedio[np.argmin(np.abs(t))] == pytest.approx(7.0)
 
 
+def test_prominencia_de_linea_distingue_50_de_60():
+    x = np.random.default_rng(0).standard_normal(int(120 * FS)) + np.sin(
+        2 * np.pi * 50 * np.arange(int(120 * FS)) / FS
+    )
+    f, psd = exploratorio.espectro_del_registro(x, FS)
+    prominencia = exploratorio.prominencia_de_linea(f, psd)
+    assert prominencia[50.0] > 10
+    assert abs(prominencia[60.0]) < 3
+
+
+def test_encabezado_edf_lee_rango_y_prefiltro(tmp_path):
+    canales = [
+        ("EEG C4-M1", "uV", "-800", "800", "HP:0.2Hz LP:35.0Hz"),
+        ("ECG", "uV", "-2400", "2400", "HP:1.0Hz LP:150.0Hz"),
+    ]
+    valores = {
+        "canal": [c[0] for c in canales], "transductor": ["", ""], "unidad": [c[1] for c in canales],
+        "minimo": [c[2] for c in canales], "maximo": [c[3] for c in canales],
+        "minimo_digital": ["-32768"] * 2, "maximo_digital": ["32767"] * 2,
+        "prefiltro": [c[4] for c in canales],
+    }
+    general = (" " * 252 + "2".ljust(4)).encode("latin-1")
+    por_canal = "".join(v.ljust(largo) for nombre, largo in exploratorio.CAMPOS_EDF for v in valores[nombre])
+    ruta = tmp_path / "prueba.edf"
+    ruta.write_bytes(general + por_canal.encode("latin-1") + b" " * (2 * (8 + 32)))
+
+    encabezado = exploratorio.encabezado_edf(ruta)
+    assert encabezado["EEG C4-M1"]["maximo"] == 800.0
+    assert encabezado["ECG"]["minimo"] == -2400.0
+    assert encabezado["EEG C4-M1"]["prefiltro"] == "HP:0.2Hz LP:35.0Hz"
+
+
+def test_emg_conserva_las_altas_frecuencias_y_pierde_las_bajas():
+    registro = registro_sintetico(minutos=2)
+    t = np.arange(len(registro.senales[EMG])) / FS
+    senal = 20 * np.sin(2 * np.pi * 80 * t) + 20 * np.sin(2 * np.pi * 2 * t)
+    filtrado_ = filtrado.filtrar_registro(
+        registro.reemplazar_senales({EMG: senal}), ConfigPreprocesamiento()
+    )
+    centro = filtrado_.senales[EMG][int(30 * FS) : int(90 * FS)]
+    assert _amplitud_en(centro, 80) == pytest.approx(20, rel=0.1)
+    assert _amplitud_en(centro, 2) < 1
+
+
+def test_pan_tompkins_con_ecg_invertido():
+    verdad = preprocesado_sintetico(minutos=2)
+    detectados = qrs.detectar_latidos(-verdad.registro.senales[ECG], FS)
+    aciertos = sum(np.min(np.abs(detectados - v)) <= 0.05 * FS for v in verdad.latidos)
+    assert aciertos / len(verdad.latidos) > 0.95
+
+
+def test_filtro_ocular_no_toca_los_tramos_sin_movimientos():
+    n = int(120 * FS)
+    rng = np.random.default_rng(0)
+    referencia = rng.standard_normal(n)
+    referencia[int(40 * FS) : int(60 * FS)] *= 30  # Único tramo con movimientos oculares.
+    eeg = 5 * rng.standard_normal(n) + 0.5 * referencia
+    senales = {canal: rng.standard_normal(n) for canal in CANALES}
+    senales.update({canal: eeg.copy() for canal in CANALES_EEG})
+    senales[EOG_E1], senales[EOG_E2] = referencia, np.zeros(n)
+    registro = Registro("X", FS, senales, np.zeros(4, dtype=int))
+
+    limpio = ocular.remover_artefacto_ocular(registro, ConfigPreprocesamiento())
+    tranquilo = slice(int(5 * FS), int(30 * FS))
+    movido = slice(int(45 * FS), int(55 * FS))
+    np.testing.assert_allclose(limpio.senales[EEG_F4][tranquilo], eeg[tranquilo])
+    assert _rms(limpio.senales[EEG_F4][movido]) < 0.5 * _rms(eeg[movido])
+
+
 def test_marcar_no_estacionarias_devuelve_una_marca_por_epoca():
     registro = registro_sintetico(minutos=2)
     marcas = segmentacion.marcar_no_estacionarias(registro, ConfigPreprocesamiento())
     assert marcas.shape == (registro.n_epocas,)
     assert marcas.dtype == bool
+
+
+def test_errores_por_tramo_detecta_un_cambio_de_amplitud():
+    rng = np.random.default_rng(0)
+    quieta = rng.standard_normal(int(30 * FS))
+    cambia = quieta.copy()
+    cambia[int(20 * FS) :] *= 3  # La potencia crece 9 veces en los últimos 10 s.
+    assert segmentacion.errores_por_tramo(quieta, FS)[1:].max() < segmentacion.CAMBIO_MAXIMO
+    assert segmentacion.errores_por_tramo(cambia, FS)[1:].max() > segmentacion.CAMBIO_MAXIMO
+    assert segmentacion.errores_por_tramo(np.zeros(int(30 * FS)), FS) is None
 
 
 # La HRV es del Frente A aunque el módulo esté en descriptores/: usa los latidos de qrs.py.
