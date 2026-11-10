@@ -36,7 +36,18 @@
 
 \textbf{Latidos y HRV.} En los 12 pacientes analizados, Pan-Tompkins detectó entre 24\,700 y 37\,900 latidos por noche, con RR medianos entre 0,69 y \SI{1,06}{\second}. El descarte por forma sacó una mediana del 4,9\,\% de los latidos, y después de filtrar los intervalos se conservó al menos el 90\,\% en 10 de los 12 pacientes. La excepción fue SN001, con el 47\,\%, porque tiene un ritmo muy irregular. El 24\,\% de sus intervalos es más de un 20\,\% más corto que el de sus vecinos, contra una mediana del 1,8\,\% en los demás. El cociente LF/HF fue menor en N3 y mayor en REM, como se esperaba, con percentiles medianos de 25 y 70 dentro de la noche. HF bajó en REM pero no subió en N3, por lo que la regla de REM usa el cociente.
 
-\pendiente{Frente B: resultados de las etapas 6 a 9.}
+\textbf{Descriptores por estadio.} Para ver si cada descriptor separa los estadios en todos los pacientes y no solo en uno, se estandarizó cada descriptor dentro de cada noche y se promedió por estadio en cada uno de los 56 pacientes de entrenamiento, entre luces apagadas y encendidas (Fig.~\ref{fig:huella}). El descriptor más consistente fue la pendiente del espectro, que en C4 pasó de una mediana de $-1{,}36$ en W a $-2{,}66$ en N3 y fue más empinada en N3 que en W en los 56 pacientes. La potencia $\delta$ relativa en F4 fue máxima en N3 en 49 pacientes y la amplitud del EMG fue mínima en REM en 43. La $\alpha$ relativa en O2 fue máxima en W solo en 31, y la energía del EOG resultó más alta en W que en REM ($+0{,}92$ contra $+0{,}46$ desvíos), de modo que ninguno de los dos alcanza por sí solo para reconocer esos estadios.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth]{b_huella_pacientes}
+  \caption{Descriptores estandarizados dentro de cada noche, un valor por paciente y por estadio (56 pacientes de entrenamiento). La línea horizontal marca el valor medio de la noche.}
+  \label{fig:huella}
+\end{figure}
+
+\textbf{Husos y ondas lentas en vigilia.} Los dos detectores encontraron eventos en W. La mediana entre pacientes fue de 1,10 husos por época en W y de 0,99 en N2, y W superó a N2 en 34 de los 56 pacientes. Las ondas lentas fueron 2,42 por época en N3 y 1,79 en W, y N3 superó a todos los demás estadios solo en 33 pacientes. Dentro de W, las épocas con dos o más husos tuvieron un EMG más alto que las que no tenían ninguno en los 56 pacientes (mediana de 17 contra \SI{7}{\micro\volt}) y menos $\alpha$ en O2 en 55 (0,04 contra 0,15). Con las ondas lentas el resultado fue el mismo. En el paciente de ejemplo, además, las detecciones de W tuvieron la misma frecuencia que las de N2, cerca de \SI{13}{\hertz}, y la corrección ocular redujo un 75\,\% las ondas lentas de REM pero solo un 7\,\% las de W. Las detecciones de vigilia corresponden entonces a vigilia activa, con movimiento y tensión muscular, y no al ritmo $\alpha$ ni a movimientos oculares.
+
+\textbf{Woody sobre ondas reales.} En los 55 pacientes de entrenamiento con al menos cinco ondas lentas en N3, la plantilla de Woody tuvo un valle menos profundo que el promedio ordinario (mediana de $-78{,}9$ contra \SI{-83,1}{\micro\volt}), porque cada onda se recorta centrada en su mínimo y el promedio ordinario suma ahí el ruido de todas. El algoritmo convergió antes de las 20 iteraciones en 25 pacientes. En los demás siguió moviendo unas pocas ondas muy deformadas, que saltan entre posiciones sin estabilizarse, y en el paciente mediano el 0,4\,\% de las ondas quedó en el corrimiento máximo de \SI{0,25}{\second}. Entre las épocas con ondas, la similitud con la plantilla fue parecida en todos los estadios (mediana entre 0,74 y 0,79).
 
 \subsection{Clasificación}
 \pendiente{Comentar la distribución de estadios (\texttt{c\_distribucion\_estadios}) y los umbrales elegidos (\texttt{c\_eleccion\_umbrales}).}
@@ -97,11 +108,11 @@
     \toprule
     & Medida & Variante A & Variante B & $p$ \\
     \midrule
-    H1 & Variación por banda     & Multitaper: -- & Welch: --      & -- \\
-       & Variación por frecuencia & Multitaper: -- & Welch: --     & -- \\
-    H2 & Error de forma          & Woody: --      & Promedio: --   & -- \\
-    H3 & F1 de N1                & Con desempate: -- & Sin desempate: -- & -- \\
-       & F1 de REM               & Con desempate: -- & Sin desempate: -- & -- \\
+    H1 & Variación por banda     & Multitaper: 0,142 & Welch: 0,148      & 0,0001 \\
+       & Variación por frecuencia & Multitaper: 0,182 & Welch: 0,220     & 0,0001 \\
+    H2 & Error de forma          & Woody: 0,28      & Promedio: 0,42   & 0,049 \\
+    H3 & F1 de N1                & Con desempate: 0,21 & Sin desempate: 0,20 & 0,13 \\
+       & F1 de REM               & Con desempate: 0,54 & Sin desempate: 0,58 & 0,033 \\
     H4 & Residuo cardíaco (\si{\micro\volt}) & Después: -- & Antes: -- & -- \\
        & $\kappa$                & Con etapas: -- & Sin etapas: -- & -- \\
     \bottomrule
