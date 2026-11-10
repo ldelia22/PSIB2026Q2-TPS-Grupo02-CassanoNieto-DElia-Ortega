@@ -2,7 +2,7 @@
 
 \subsection{Base de datos}
 Se usó la HMC Sleep Staging Database v1.1~\cite{alvarez2022}, con 151 PSG de adultos registradas a \SI{256}{\hertz}. Cada registro tiene cuatro canales de EEG (F4, C4, O2 y C3, referidos a la mastoide contralateral), dos de EOG, EMG de mentón y ECG, anotados por técnicos según la AASM. Se eligieron al azar 70 registros, con una semilla fija para que los tres integrantes trabajen con los mismos, y se separaron por paciente en 56 de entrenamiento y 14 de prueba, de modo que ninguna época de un paciente de prueba se use para ajustar el modelo. Todos los parámetros del preprocesamiento se eligieron mirando solo los pacientes de entrenamiento.
-\pendiente{Decidir si se evalúa toda la grabación o solo entre luces apagadas y encendidas.}
+Las anotaciones incluyen vigilia antes de apagar y después de prender las luces. Esas épocas son fáciles de clasificar e inflarían el acuerdo, y además correrían hacia la vigilia los percentiles con que se expresan los descriptores (Sección~\ref{sec:clasificacion}). Por eso, la clasificación y la evaluación se restringieron a las épocas comprendidas entre las marcas de luces apagadas y encendidas de cada registro. Como referencia, en los resultados se informa también el acuerdo con la grabación completa.
 
 % ---------------------------------------------------------------- Frente A
 \subsection{Preprocesamiento}

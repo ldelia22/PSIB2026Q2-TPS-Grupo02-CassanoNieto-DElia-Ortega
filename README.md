@@ -206,10 +206,13 @@ Surgieron al armar el esqueleto y contrastar el anteproyecto con la base.
    recortar la banda en la que se detectan las ondas lentas.
 2. **Cantidad de registros.** El anteproyecto dice 148 PSG, pero la v1.1 publica 151 (no
    existen SN014, SN064 ni SN135). No cambia el método, sí el texto del informe.
-3. **Épocas fuera del período de sueño.** Las anotaciones incluyen vigilia antes de
-   apagar y después de prender las luces. Esas épocas son fáciles de clasificar y pueden
-   inflar κ. Hay que decidir si se evalúa toda la grabación o solo entre
-   `luces_apagadas_s` y `luces_encendidas_s`.
+3. **Épocas fuera del período de sueño.** Resuelta. Las anotaciones incluyen vigilia
+   antes de apagar y después de prender las luces, que es fácil de clasificar e inflaría
+   κ. La clasificación y la evaluación usan solo las épocas entre luces apagadas y
+   encendidas (`evaluacion/periodo.py`): los notebooks 03 y 04 recortan las tablas con
+   `SOLO_PERIODO_DE_SUENO = True`, y `scripts/entrenar_y_evaluar.py` lo hace salvo que
+   se pase `--toda-la-noche`. El notebook 03 compara los dos criterios. La interfaz
+   muestra la grabación completa.
 4. **Épocas no estacionarias.** Resuelta. La etapa 5 las marca y quedan en la tabla, pero
    las reglas no las usan y no se excluyen de la evaluación. El notebook 01 muestra que el
    clasificador acierta menos en ellas y que un tercio de las marcadas de W, N1, N2 y REM

@@ -215,3 +215,34 @@ def test_referencia_csp_usa_el_ancho_de_cada_estadio():
     centro, escala = reglas.referencia_csp(puntaje, estadios, (N1, R))
     assert abs(centro) < 0.2
     assert 0.5 < escala < 0.9  # Rango intercuartil de una normal de desvío 0,5: ~0,67.
+
+
+def test_percentiles_ignoran_nan():
+    p = reglas.percentil_por_registro(np.array([10.0, np.nan, 30.0, 20.0]))[:, 0]
+    assert np.isnan(p[1])
+    assert p[[0, 2, 3]].tolist() == [0.0, 100.0, 50.0]
+
+
+def test_mascara_periodo_de_sueno():
+    from estadios.evaluacion.periodo import mascara_periodo_de_sueno
+
+    mascara = mascara_periodo_de_sueno(10, 60.0, 240.0)  # Épocas 2 a 7.
+    assert np.flatnonzero(mascara).tolist() == [2, 3, 4, 5, 6, 7]
+    assert mascara_periodo_de_sueno(5, None, None).all()
+
+
+def test_recortar_a_periodo_lee_las_luces(tmp_path):
+    from estadios.evaluacion.periodo import recortar_a_periodo_de_sueno
+
+    tabla = tabla_sintetica(n_epocas=20)
+    (tmp_path / f"{tabla.id}_sleepscoring.txt").write_text(
+        "Date, Time, Recording onset, Duration, Annotation, Linked channel\n"
+        "2001-01-01, 22:00:00, 90.0, 0.0, Lights off,\n"
+        "2001-01-01, 06:00:00, 450.0, 0.0, Lights on,\n"
+    )
+    recortada = recortar_a_periodo_de_sueno(tabla, tmp_path)
+    assert len(recortada.estadios) == 12  # Épocas 3 a 14.
+    np.testing.assert_array_equal(recortada.estadios, tabla.estadios[3:15])
+    assert recortada.covarianzas_eeg.shape[0] == recortada.matriz.shape[0] == 12
+    # Sin archivo de anotaciones (datos sintéticos), no cambia.
+    assert recortar_a_periodo_de_sueno(tabla, tmp_path / "otro") is tabla

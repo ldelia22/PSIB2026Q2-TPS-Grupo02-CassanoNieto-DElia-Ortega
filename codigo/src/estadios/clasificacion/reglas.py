@@ -44,10 +44,17 @@ def percentil_por_registro(matriz: np.ndarray) -> np.ndarray:
     matriz = np.asarray(matriz, dtype=float)
     if matriz.ndim == 1:
         matriz = matriz[:, None]
-    n = matriz.shape[0]
-    if n == 1:
-        return np.full_like(matriz, 50.0, dtype=float)
-    return (rankdata(matriz, axis=0) - 1) / (n - 1) * 100
+    salida = np.full(matriz.shape, np.nan)
+    for j in range(matriz.shape[1]):
+        # Una época sin valor (NaN) queda en NaN: no cumple ninguna regla que use ese
+        # descriptor, y no corre el percentil de las demás.
+        validos = ~np.isnan(matriz[:, j])
+        n = int(validos.sum())
+        if n == 1:
+            salida[validos, j] = 50.0
+        elif n > 1:
+            salida[validos, j] = (rankdata(matriz[validos, j]) - 1) / (n - 1) * 100
+    return salida
 
 
 def buscar_descriptor(nombres: list[str], grupo: str, base: str, canal: str | None = None) -> int | None:
