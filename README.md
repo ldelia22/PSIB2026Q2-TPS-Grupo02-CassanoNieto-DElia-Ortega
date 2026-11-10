@@ -45,12 +45,17 @@ El anteproyecto proponía LDA + HMM, pero la devolución aclara que la clasifica
 TP cuatrimestral no puede usar técnicas de IA, y ambos lo son (se entrenan con épocas
 etiquetadas). Se reemplazaron por:
 
-1. **Reglas AASM** (`clasificacion/reglas.py`), evaluadas en orden sobre el percentil de
-   cada descriptor dentro de su noche: W (EMG y α altos), N3 (δ y ondas lentas), REM
-   (atonía, EOG o LF/HF altos, pocos husos), N2 (husos) y N1 por descarte.
-2. **Desempate N1/REM con CSP**: la época cambia de estadio solo si la potencia CSP queda
-   claramente del otro lado (H3).
-3. **Suavizado por reglas** (`clasificacion/suavizado.py`) en lugar del HMM: épocas
+1. **Reglas AASM** (`clasificacion/reglas.py`), evaluadas en orden: W (EMG alto, y α alta
+   o parpadeos), N3 (δ relativa alta y ondas lentas), REM (atonía, EOG o LF/HF altos, sin
+   husos), N2 (al menos un huso) y N1 por descarte. Cada descriptor va en sus unidades:
+   potencias relativas como fracción, husos y ondas como conteo por época, y EMG, EOG y
+   LF/HF en veces la mediana de la noche del paciente. Una primera versión con
+   percentiles de la noche dio κ = 0,245 con datos reales y se descartó.
+2. **Continuidad de N2** (AASM): una época que cae en N1 por descarte después de una N2
+   sigue siendo N2.
+3. **Desempate N1/REM con CSP**: implementado, pero apagado por defecto (`"csp"` no está
+   en `grupos`), porque con datos reales empeoraba la clasificación. H3 lo evalúa.
+4. **Suavizado por reglas** (`clasificacion/suavizado.py`) en lugar del HMM: épocas
    aisladas y REM mínimo, o filtro de moda.
 
 Los umbrales están en `ConfigClasificacion` y se eligen a mano con los histogramas de
@@ -66,9 +71,9 @@ clasifica cada época. El flujo es:
 | 3. Clasificar | Cada paciente por separado | Una vez por paciente |
 | 4. Evaluar (κ global y por paciente) | Prueba | Al final |
 
-El percentil de cada época se calcula dentro de su noche; el histograma junta las épocas
-de todas las noches de entrenamiento. El detalle está al principio del notebook 03. LDA y HMM quedan para el
-final de la materia. El detalle y la justificación están en la sección de métodos del
+EMG, EOG y LF/HF se normalizan por la mediana de la noche de cada paciente; el histograma
+junta las épocas de todas las noches de entrenamiento. El detalle está en el notebook 03. LDA y HMM quedan para
+el final de la materia. El detalle y la justificación están en la sección de métodos del
 informe.
 
 ## Cómo está dividido

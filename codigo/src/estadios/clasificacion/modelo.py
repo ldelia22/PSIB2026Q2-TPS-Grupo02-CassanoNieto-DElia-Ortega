@@ -47,7 +47,7 @@ class ModeloEstadios:
         return self
 
     def clasificar_epocas(self, tabla: TablaDescriptores) -> tuple[np.ndarray, np.ndarray]:
-        """Reglas y desempate CSP, sin suavizado.
+        """Reglas, desempate CSP y continuidad de N2, sin suavizado.
 
         Returns:
             Estadio de cada época e índice en `reglas.REGLAS` de la regla que lo decidió.
@@ -59,6 +59,8 @@ class ModeloEstadios:
             estadios, regla = reglas.desempatar_con_csp(
                 estadios, regla, puntaje, filtro.par, centro, escala, self.cfg.csp_margen
             )
+        if self.cfg.continuidad_n2:
+            estadios, regla = reglas.continuidad_n2(estadios, regla)
         return estadios, regla
 
     def suavizar(self, estadios: np.ndarray) -> np.ndarray:

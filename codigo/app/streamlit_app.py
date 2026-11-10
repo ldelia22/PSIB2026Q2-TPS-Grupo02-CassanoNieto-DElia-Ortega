@@ -649,7 +649,7 @@ def pestana_clasificacion(fuente: str, epoca: int, cfg_clasificacion) -> None:
     columnas[3].metric("Regla que decidió", reglas.REGLAS[regla[epoca]])
     percentiles = reglas.descriptores_de_reglas(tabla.matriz, tabla.nombres, cfg_clasificacion)
     st.dataframe(
-        pd.DataFrame({"Percentil en la noche": {k: round(float(v[epoca]), 1) for k, v in percentiles.items()}}).T,
+        pd.DataFrame({"Valor que usan las reglas": {k: round(float(v[epoca]), 2) for k, v in percentiles.items()}}).T,
         width="stretch",
     )
 

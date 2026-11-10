@@ -59,14 +59,15 @@ def test_buscar_descriptor_prefiere_el_canal_y_si_no_usa_el_que_haya():
 
 def test_reglas_en_orden_y_n1_por_descarte():
     cfg = ConfigClasificacion()
-    # Columnas: W, N3, REM, N2 y una época que no cumple nada.
+    # Columnas: W, N3, REM, N2 y una época que no cumple nada. Unidades de la
+    # configuración: EMG y EOG en veces la mediana, potencias como fracción, conteos.
     p = {
-        "emg": np.array([90, 50, 10, 50, 50.0]),
-        "alfa": np.array([90, 10, 10, 10, 50.0]),
-        "delta": np.array([10, 95, 10, 30, 30.0]),
-        "ondas": np.array([10, 95, 10, 30, 30.0]),
-        "eog": np.array([50, 10, 95, 10, 50.0]),
-        "husos": np.array([10, 10, 10, 90, 10.0]),
+        "emg": np.array([3.0, 1.0, 0.3, 1.0, 1.0]),
+        "alfa": np.array([0.30, 0.02, 0.05, 0.05, 0.10]),
+        "delta": np.array([0.30, 0.90, 0.40, 0.60, 0.50]),
+        "ondas": np.array([0, 10, 0, 1, 1.0]),
+        "eog": np.array([1.0, 0.5, 5.0, 0.5, 1.0]),
+        "husos": np.array([0, 0, 0, 3, 0.0]),
     }
     estadios, regla = reglas.aplicar_reglas(p, cfg, 5)
     assert estadios.tolist() == [W, N3, R, N2, N1]
@@ -75,14 +76,14 @@ def test_reglas_en_orden_y_n1_por_descarte():
 
 def test_regla_sin_su_descriptor_no_se_cumple():
     cfg = ConfigClasificacion()
-    p = {"emg": np.array([90.0]), "husos": np.array([10.0])}  # Falta alfa: no es W.
+    p = {"emg": np.array([3.0]), "husos": np.array([0.0])}  # Faltan α y EOG: no es W.
     estadios, _ = reglas.aplicar_reglas(p, cfg, 1)
     assert estadios.tolist() == [N1]
 
 
 def test_rem_puede_usar_la_hrv_en_lugar_del_eog():
     cfg = ConfigClasificacion()
-    p = {"emg": np.array([10.0]), "eog": np.array([10.0]), "lf_hf": np.array([95.0])}
+    p = {"emg": np.array([0.3]), "eog": np.array([0.5]), "lf_hf": np.array([3.0])}
     assert reglas.aplicar_reglas(p, cfg, 1)[0].tolist() == [R]
 
 
@@ -246,3 +247,42 @@ def test_recortar_a_periodo_lee_las_luces(tmp_path):
     assert recortada.covarianzas_eeg.shape[0] == recortada.matriz.shape[0] == 12
     # Sin archivo de anotaciones (datos sintéticos), no cambia.
     assert recortar_a_periodo_de_sueno(tabla, tmp_path / "otro") is tabla
+
+
+def test_vigilia_con_ojos_abiertos_por_parpadeos():
+    cfg = ConfigClasificacion()
+    p = {"emg": np.array([3.0]), "alfa": np.array([0.02]), "eog": np.array([5.0])}
+    assert reglas.aplicar_reglas(p, cfg, 1)[0].tolist() == [W]
+
+
+def test_veces_la_mediana():
+    log10 = np.log10(np.array([1.0, 2.0, 4.0, np.nan, 8.0]))
+    v = reglas.veces_la_mediana(log10)  # Mediana sin NaN: 3 (en log, entre 2 y 4).
+    assert np.isnan(v[3])
+    np.testing.assert_allclose(v[[0, 1, 2, 4]], [1 / np.sqrt(8), 1 / np.sqrt(2), np.sqrt(2), 2 * np.sqrt(2)])
+
+
+def test_descriptores_de_reglas_en_sus_unidades():
+    cfg = ConfigClasificacion()
+    nombres = ["perifericos.amplitud_emg", "espectro.f4_delta_rel", "husos.cantidad"]
+    matriz = np.array([[1.0, 0.8, 2], [2.0, 0.5, 0], [3.0, 0.6, 1]])
+    v = reglas.descriptores_de_reglas(matriz, nombres, cfg)
+    np.testing.assert_allclose(v["emg"], [0.1, 1.0, 10.0])  # log10: mediana 2 → 10^(x-2).
+    np.testing.assert_allclose(v["delta"], [0.8, 0.5, 0.6])  # Fracción: sin cambios.
+    np.testing.assert_allclose(v["husos"], [2, 0, 1])  # Conteo: sin cambios.
+
+
+def test_continuidad_n2():
+    i = reglas.REGLAS.index
+    estadios = np.array([N2, N1, N1, W, N1, N2, R, N1])
+    regla = np.array([i("N2"), i("N1"), i("N1"), i("W"), i("N1"), i("N2"), i("R"), i("N1")])
+    nuevos, nueva_regla = reglas.continuidad_n2(estadios, regla)
+    # Se propaga después de N2 hasta que aparece otra regla (W); no actúa después de W ni de REM.
+    assert nuevos.tolist() == [N2, N2, N2, W, N1, N2, R, N1]
+    assert (nueva_regla == i("N2 cont.")).sum() == 2
+
+
+def test_csp_apagado_por_defecto():
+    assert "csp" not in ConfigClasificacion().grupos
+    modelo = ModeloEstadios(ConfigClasificacion()).ajustar([tabla_sintetica(semilla=0)])
+    assert modelo.filtros_csp == []

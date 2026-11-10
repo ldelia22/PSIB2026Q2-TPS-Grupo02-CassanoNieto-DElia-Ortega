@@ -95,31 +95,35 @@ El anteproyecto proponía clasificar cada época con un análisis discriminante 
 Por eso se los reemplazó por un clasificador por reglas, construido a mano a partir de los criterios del manual AASM~\cite{berry2017}, y por un suavizado temporal con reglas fijas de continuidad. Este cambio mantiene el objetivo de que cada decisión sea explicable, e incluso lo refuerza: cada época queda asignada por una regla concreta sobre propiedades medibles de las señales, en lugar de por una combinación lineal de todos los descriptores. El LDA y el HMM quedan como mejora para la instancia final.
 
 \subsubsection{Clasificador por reglas}
-Antes de aplicar las reglas, cada descriptor se expresó como el percentil que ocupa dentro de su propia noche, de 0 a 100. Así, ``EMG $\leq 35$'' significa ``EMG dentro del 35\,\% más bajo de ese registro'', lo que compensa las diferencias de amplitud entre pacientes, electrodos y montajes sin depender de umbrales en \si{\micro\volt}.
+Cada descriptor se usó en las unidades con que se interpreta fisiológicamente. Las potencias relativas ($\delta$ en F4, $\alpha$ en O2) se usaron como fracción de la potencia total, y la cantidad de husos y de ondas lentas, como conteo por época; ninguna de estas magnitudes depende de la amplitud del registro. En cambio, la amplitud del EMG, la energía del EOG y el cociente LF/HF dependen del paciente y de la colocación de los electrodos, por lo que se expresaron como múltiplo de la mediana de la propia noche, $10^{\,x - \operatorname{mediana}(x)}$ para los descriptores en $\log_{10}$: un valor de 1 corresponde a lo típico de ese paciente.
 
-Las reglas se evalúan en el orden de la Tabla~\ref{tab:reglas} y cada época se asigna al estadio de la primera que se cumple. El orden sigue la lógica del técnico: primero se descartan los estadios con rasgos más distintivos (vigilia y sueño profundo), después se busca la atonía característica de REM, y N1 queda como estadio de transición, asignado por descarte.
+Una primera versión expresaba todos los descriptores como percentil dentro de la noche. Con los registros reales alcanzó solo $\kappa = 0{,}245$: un umbral en percentiles fija la fracción de cada noche que puede cumplir la regla, independientemente de cuánto tiempo pase el paciente en cada estadio, y en pacientes con poco sueño profundo llevaba épocas de vigilia y de N2 a N3.
+
+Las reglas se evalúan en el orden de la Tabla~\ref{tab:reglas} y cada época se asigna al estadio de la primera que se cumple. El orden sigue la lógica del técnico: primero se descartan los estadios con rasgos más distintivos (vigilia y sueño profundo), después se busca la atonía característica de REM, y N1 queda como estadio de transición, asignado por descarte. La regla de vigilia acepta, en lugar del ritmo $\alpha$, parpadeos (EOG muy alto), porque con los ojos abiertos el ritmo $\alpha$ desaparece.
 
 \begin{table}[htbp]
   \centering
-  \caption{Reglas del clasificador, en orden de evaluación. Los umbrales son percentiles de la noche.}
+  \caption{Reglas del clasificador, en orden de evaluación. EMG, EOG y LF/HF en veces la mediana de la noche; potencias relativas como fracción; husos y ondas lentas por época.}
   \label{tab:reglas}
   \begin{tabular}{clll}
     \toprule
     Orden & Estadio & Condición & Fundamento fisiológico \\
     \midrule
-    1 & W   & EMG $\geq$ \pendiente{60} y $\alpha_\text{rel}$(O2) $\geq$ \pendiente{60} & Tono muscular y ritmo $\alpha$ occipital \\
-    2 & N3  & $\delta_\text{rel}$(F4) $\geq$ \pendiente{70} y ondas lentas $\geq$ \pendiente{70} & Ondas lentas de gran amplitud \\
-    3 & REM & EMG $\leq$ \pendiente{35}, EOG $\geq$ \pendiente{60} (o LF/HF $\geq$ \pendiente{75}) & Atonía, movimientos oculares \\
-        &     & y husos $\leq$ \pendiente{50} & y predominio simpático \\
-    4 & N2  & husos $\geq$ \pendiente{50} & Husos de sueño \\
+    1 & W   & EMG $\geq$ \pendiente{1,5} y ($\alpha_\text{rel}$(O2) $\geq$ \pendiente{0,15} o EOG $\geq$ \pendiente{3}) & Tono muscular; ritmo $\alpha$ o parpadeos \\
+    2 & N3  & $\delta_\text{rel}$(F4) $\geq$ \pendiente{0,7} y ondas lentas $\geq$ \pendiente{3} & Ondas lentas de gran amplitud \\
+    3 & REM & EMG $\leq$ \pendiente{0,7}, EOG $\geq$ \pendiente{2} (o LF/HF $\geq$ \pendiente{1,5}) & Atonía, movimientos oculares \\
+        &     & y ningún huso & y predominio simpático \\
+    4 & N2  & al menos un huso & Husos de sueño \\
     5 & N1  & ninguna de las anteriores & Estadio de transición \\
     \bottomrule
   \end{tabular}
 \end{table}
 
-\textbf{Elección de los umbrales.} Para cada regla se graficó, con los pacientes de entrenamiento, el histograma del descriptor en el estadio que la regla detecta y en los estadios de los que debe separarlo (por ejemplo, la potencia $\delta$ en N3 frente a N2). El umbral se fijó en la zona donde los histogramas se cruzan (Fig.~\pendiente{ref}). Se trata de una decisión del diseñador tomada a partir de un gráfico, igual que la elección de la frecuencia de corte de un filtro, y no de un ajuste automático: no se hizo ninguna búsqueda sobre combinaciones de umbrales para maximizar el acuerdo, y los pacientes de prueba no se usaron en ningún momento.
+\textbf{Continuidad de N2.} Muchas épocas de N2 no contienen husos y, sin otra regla, caerían en N1 por descarte. Siguiendo el criterio de continuidad de la AASM~\cite{berry2017}, una época asignada a N1 por descarte que sigue a una época N2 se asignó a N2; la regla se aplica en orden temporal, de modo que se propaga hasta que otra regla (vigilia, REM o N3) interrumpe la secuencia.
 
-\textbf{Desempate entre N1 y REM con CSP.} N1 y REM tienen un EEG parecido y son el par que más se confunde. Para ellos se usó la señal CSP de la etapa~8: su log-potencia en cada época es alta cuando la época se parece a N1 y baja cuando se parece a REM. Una época asignada a uno de estos dos estadios se cambia al otro solo si su puntaje CSP queda claramente del otro lado del punto medio entre las medianas de ambos estadios, a más de \pendiente{1} vez el ancho típico de cada estadio (el promedio de sus rangos intercuartiles). El punto medio y el ancho se calculan con las mismas épocas de entrenamiento con que se obtienen los filtros CSP. Este desempate es el que evalúa H3.
+\textbf{Elección de los umbrales.} Para cada regla se graficó, con los pacientes de entrenamiento, el histograma del descriptor en el estadio que la regla detecta y en los estadios de los que debe separarlo (por ejemplo, la $\delta$ relativa en N3 frente a N2). El umbral se fijó en la zona donde los histogramas se cruzan (Fig.~\pendiente{ref}). Se trata de una decisión del diseñador tomada a partir de un gráfico, igual que la elección de la frecuencia de corte de un filtro, y no de un ajuste automático: no se hizo ninguna búsqueda sobre combinaciones de umbrales para maximizar el acuerdo, y los pacientes de prueba no se usaron en ningún momento.
+
+\textbf{Desempate entre N1 y REM con CSP.} N1 y REM tienen un EEG parecido y son el par que más se confunde. Para ellos se evaluó usar la señal CSP de la etapa~8: su log-potencia en cada época es alta cuando la época se parece a N1 y baja cuando se parece a REM. Una época asignada a uno de estos dos estadios se cambia al otro solo si su puntaje CSP queda claramente del otro lado del punto medio entre las medianas de ambos estadios, a más de \pendiente{1} vez el ancho típico de cada estadio (el promedio de sus rangos intercuartiles). El punto medio y el ancho se calculan con las mismas épocas de entrenamiento con que se obtienen los filtros CSP. Con los registros reales, los puntajes de N1 y REM se superpusieron casi por completo y el desempate empeoró la clasificación, por lo que el clasificador final no lo usa; su efecto se cuantifica en la verificación de H3.
 
 \subsubsection{Suavizado temporal}
 Las reglas deciden cada época por separado, pero los estadios duran varios minutos. En lugar del HMM se aplicaron dos reglas de continuidad, en el espíritu del manual AASM: una época distinta de sus dos vecinas, cuando estas coinciden, toma el estadio de las vecinas (por ejemplo, N3--REM--N3 pasa a N3--N3--N3), y un tramo de REM de menos de \pendiente{2} épocas toma el estadio anterior. Como alternativa más simple se evaluó un filtro de moda de \pendiente{5} épocas.

@@ -7,7 +7,7 @@ import pytest
 
 from estadios import pipeline
 from estadios.clasificacion.modelo import ModeloEstadios
-from estadios.comun.config import Config, ConfigClasificacion, ConfigDescriptores
+from estadios.comun.config import GRUPOS_DESCRIPTORES, Config, ConfigClasificacion, ConfigDescriptores
 from estadios.comun.constantes import N_ESTADIOS, SIN_ANOTAR
 from estadios.comun.sintetico import preprocesado_sintetico, registro_sintetico, tabla_sintetica
 from estadios.descriptores import csp, ensamblado, espectro, hrv, husos, ondas_lentas, perifericos
@@ -112,7 +112,7 @@ def etapas_c(monkeypatch):
 def test_modelo_ajusta_csp_sin_epocas_sin_anotar(etapas_c):
     tabla = tabla_sintetica(n_epocas=100)
     tabla.estadios[:5] = SIN_ANOTAR
-    modelo = ModeloEstadios(ConfigClasificacion()).ajustar([tabla])
+    modelo = ModeloEstadios(ConfigClasificacion(grupos=GRUPOS_DESCRIPTORES)).ajustar([tabla])
 
     assert SIN_ANOTAR not in etapas_c[0]
     assert len(modelo.filtros_csp) == len(modelo.referencias_csp) == 1

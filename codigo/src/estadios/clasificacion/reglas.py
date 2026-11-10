@@ -8,18 +8,23 @@ elige la frecuencia de corte de un filtro.
 
 Las reglas se evalúan en orden y gana la primera que se cumple:
 
-1. W   : EMG alto y potencia alfa relativa alta (occipital).
-2. N3  : potencia delta relativa alta (frontal) y muchas ondas lentas.
+1. W   : EMG alto y, además, ritmo α occipital (ojos cerrados) o parpadeos (ojos
+         abiertos).
+2. N3  : potencia δ relativa alta (frontal) y ondas lentas.
 3. REM : atonía (EMG bajo), movimientos oculares (energía de EOG alta, o LF/HF alto si
-         se usa la HRV) y pocos husos.
-4. N2  : husos.
+         se usa la HRV) y ningún huso.
+4. N2  : al menos un huso.
 5. N1  : lo que no cumplió ninguna regla (en la AASM, N1 se define en buena parte por
-         descarte).
+         descarte), salvo que siga a una época N2: por la regla de continuidad de la
+         AASM, sigue siendo N2.
 
 Después, CSP desempata entre N1 y REM cuando su evidencia es fuerte (H3): la época\ncambia de estadio si la potencia de la señal CSP queda claramente del lado del otro.
 
-Los umbrales están en percentiles del propio registro, para compensar diferencias de
-amplitud entre pacientes y montajes.
+Cada descriptor se usa en las unidades con que se interpreta (ver `ConfigClasificacion`).
+Una primera versión expresaba todos como percentiles de la noche, pero con datos reales
+eso forzaba una fracción fija de cada noche en cada regla, sin importar cuánto N3 o N2
+tuviera el paciente. Ahora solo EMG, EOG y LF/HF, que dependen de la amplitud, se
+normalizan por paciente, dividiendo por la mediana de su noche.
 """
 
 from __future__ import annotations
@@ -31,8 +36,12 @@ from ..comun.config import ConfigClasificacion
 from ..comun.constantes import N1, N2, N3, R, W
 
 # Nombre de cada regla, en el orden en que se evalúan. "csp" marca las épocas que
-# cambió el desempate.
-REGLAS = ("W", "N3", "R", "N2", "N1", "csp")
+# cambió el desempate y "N2 cont.", las que la continuidad pasó de N1 a N2.
+REGLAS = ("W", "N3", "R", "N2", "N1", "csp", "N2 cont.")
+
+# Descriptores que dependen de la amplitud (están en log10) y se expresan en veces la
+# mediana de la noche.
+RELATIVOS_A_LA_NOCHE = ("emg", "eog", "lf_hf")
 
 
 def percentil_por_registro(matriz: np.ndarray) -> np.ndarray:
@@ -73,10 +82,25 @@ def buscar_descriptor(nombres: list[str], grupo: str, base: str, canal: str | No
     return None
 
 
+def veces_la_mediana(log10_valores: np.ndarray) -> np.ndarray:
+    """Valor de cada época dividido por la mediana de la noche (1 = lo típico).
+
+    Recibe el descriptor en log10, como lo entrega el Frente B. Las épocas sin valor
+    (NaN) quedan en NaN y no cumplen ninguna regla.
+    """
+    x = np.asarray(log10_valores, dtype=float)
+    if np.isnan(x).all():
+        return x.copy()
+    return 10 ** (x - np.nanmedian(x))
+
+
 def descriptores_de_reglas(
     matriz: np.ndarray, nombres: list[str], cfg: ConfigClasificacion
 ) -> dict[str, np.ndarray]:
-    """Percentil de cada descriptor que usan las reglas. Faltan los grupos apagados."""
+    """Cada descriptor que usan las reglas, en las unidades de `ConfigClasificacion`.
+
+    Faltan los de grupos apagados o que la tabla no tiene.
+    """
     pedidos = {
         "emg": ("perifericos", "amplitud_emg", None),
         "eog": ("perifericos", "energia_eog", None),
@@ -86,23 +110,25 @@ def descriptores_de_reglas(
         "husos": ("husos", "cantidad", None),
         "lf_hf": ("hrv", "lf_hf", None),
     }
-    percentiles = {}
+    valores = {}
     for clave, (grupo, base, canal) in pedidos.items():
         if grupo not in cfg.grupos:
             continue
         i = buscar_descriptor(nombres, grupo, base, canal)
-        if i is not None:
-            percentiles[clave] = percentil_por_registro(matriz[:, i])[:, 0]
-    return percentiles
+        if i is None:
+            continue
+        columna = matriz[:, i].astype(float)
+        valores[clave] = veces_la_mediana(columna) if clave in RELATIVOS_A_LA_NOCHE else columna
+    return valores
 
 
 def aplicar_reglas(
-    p: dict[str, np.ndarray], cfg: ConfigClasificacion, n_epocas: int
+    v: dict[str, np.ndarray], cfg: ConfigClasificacion, n_epocas: int
 ) -> tuple[np.ndarray, np.ndarray]:
-    """Árbol de decisión de la AASM sobre los percentiles.
+    """Árbol de decisión de la AASM sobre los descriptores.
 
-    Una regla cuyo descriptor falta no se cumple nunca (salvo la de REM, que usa la HRV
-    o el EOG, lo que haya).
+    Una regla cuyo descriptor falta no se cumple nunca. Las alternativas (α o parpadeos
+    en W; EOG o LF/HF en REM) usan la que haya.
 
     Returns:
         Estadio de cada época e índice en REGLAS de la regla que lo decidió.
@@ -110,17 +136,18 @@ def aplicar_reglas(
     falso = np.zeros(n_epocas, dtype=bool)
 
     def mayor(clave, umbral):
-        return p[clave] >= umbral if clave in p else falso
+        return v[clave] >= umbral if clave in v else falso
 
     def menor(clave, umbral):
-        return p[clave] <= umbral if clave in p else falso
+        return v[clave] <= umbral if clave in v else falso
 
+    vigilia = mayor("alfa", cfg.w_alfa_min) | mayor("eog", cfg.w_eog_min)
     movimientos = mayor("eog", cfg.r_eog_min) | mayor("lf_hf", cfg.r_lf_hf_min)
-    pocos_husos = menor("husos", cfg.r_husos_max) if "husos" in p else ~falso
+    sin_husos = menor("husos", cfg.r_husos_max) if "husos" in v else ~falso
     condiciones = [
-        (W, mayor("emg", cfg.w_emg_min) & mayor("alfa", cfg.w_alfa_min)),
+        (W, mayor("emg", cfg.w_emg_min) & vigilia),
         (N3, mayor("delta", cfg.n3_delta_min) & mayor("ondas", cfg.n3_ondas_min)),
-        (R, menor("emg", cfg.r_emg_max) & movimientos & pocos_husos),
+        (R, menor("emg", cfg.r_emg_max) & movimientos & sin_husos),
         (N2, mayor("husos", cfg.n2_husos_min)),
     ]
     estadios = np.full(n_epocas, N1)
@@ -131,6 +158,23 @@ def aplicar_reglas(
         estadios[elegidas] = estadio
         regla[elegidas] = i
         pendiente &= ~elegidas
+    return estadios, regla
+
+
+def continuidad_n2(estadios: np.ndarray, regla: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """Regla de continuidad de N2 de la AASM.
+
+    Una época que quedó en N1 por descarte (no cumplió ninguna regla) y sigue a una
+    época N2 se marca como N2: el sueño N2 continúa hasta que algo lo interrumpe (un
+    despertar, movimientos oculares, ondas lentas), aunque la época no tenga husos.
+    Se recorre en orden, así que se propaga por varias épocas seguidas.
+    """
+    estadios, regla = estadios.copy(), regla.copy()
+    descarte = REGLAS.index("N1")
+    for t in range(1, len(estadios)):
+        if regla[t] == descarte and estadios[t - 1] == N2:
+            estadios[t] = N2
+            regla[t] = REGLAS.index("N2 cont.")
     return estadios, regla
 
 

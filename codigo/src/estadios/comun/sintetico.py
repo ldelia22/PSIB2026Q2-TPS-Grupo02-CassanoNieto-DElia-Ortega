@@ -160,17 +160,23 @@ def tabla_sintetica(n_epocas: int = 600, semilla: int = 0) -> TablaDescriptores:
         "hrv.hf",
         "hrv.lf_hf",
     ]
+    # Valores en las mismas unidades que entrega el Frente B: potencias relativas como
+    # fracción, husos y ondas como conteos por época, y EOG, EMG y HRV en log10.
     centros = np.array(
         [
-            # delta alfa husos ondas eog  emg  hf  lf/hf
-            [-1.0, 1.5, -1.0, -1.0, 1.0, 1.5, -0.5, 0.5],  # W
-            [-0.5, 0.2, -0.5, -0.8, 0.5, 0.5, -0.2, 0.2],  # N1
-            [0.3, -0.5, 1.5, 0.0, -0.8, 0.0, 0.5, -0.5],  # N2
-            [2.0, -1.0, 0.0, 2.0, -1.0, -0.2, 1.0, -1.0],  # N3
-            [-0.6, -0.2, -1.0, -1.0, 2.0, -1.5, -0.5, 1.5],  # R
+            # delta alfa  husos ondas  eog   emg   hf    lf/hf
+            [0.35, 0.25, 0.0, 0.1, 1.0, 0.6, -0.3, 0.4],  # W
+            [0.50, 0.10, 0.2, 0.3, 0.5, 0.2, -0.1, 0.2],  # N1
+            [0.65, 0.05, 2.5, 1.0, -0.3, 0.0, 0.2, -0.2],  # N2
+            [0.85, 0.03, 0.5, 8.0, -0.5, -0.1, 0.4, -0.4],  # N3
+            [0.50, 0.07, 0.0, 0.1, 1.2, -0.6, -0.2, 0.5],  # R
         ]
     )
-    matriz = centros[y] + 0.5 * rng.standard_normal((n_epocas, len(nombres)))
+    dispersion = np.array([0.07, 0.04, 0.0, 0.0, 0.3, 0.2, 0.2, 0.2])
+    matriz = centros[y] + dispersion * rng.standard_normal((n_epocas, len(nombres)))
+    matriz[:, :2] = matriz[:, :2].clip(0.0, 1.0)
+    for j in (2, 3):  # Husos y ondas: conteos de Poisson.
+        matriz[:, j] = rng.poisson(centros[y, j])
 
     # Covarianzas con varianza dominante en un canal distinto según el estadio.
     n_canales = len(CANALES_EEG)

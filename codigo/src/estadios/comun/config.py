@@ -63,36 +63,47 @@ class ConfigClasificacion:
     """Clasificador por reglas AASM (etapa 10). Reemplaza al LDA + HMM del anteproyecto,
     porque la cátedra no permite técnicas de IA en la clasificación del TP cuatrimestral.
 
-    Los umbrales están en percentiles del propio registro (0 a 100): "EMG <= 30" quiere
-    decir "en el 30 % más bajo de esa noche". Son provisorios: se eligen mirando los
-    histogramas de `notebooks/03_frente_C_clasificacion.ipynb` con los pacientes de
-    entrenamiento y se copian acá.
+    Cada umbral está en las unidades con que se interpreta el descriptor:
+
+    - potencias relativas (δ, α): fracción de la potencia total, de 0 a 1;
+    - husos y ondas lentas: cantidad de eventos detectados en la época de 30 s;
+    - EMG, EOG y LF/HF: veces la mediana de la noche del paciente (1 = lo típico de
+      esa noche), porque dependen de la amplitud y del electrodo.
+
+    Los valores se eligen mirando los histogramas de
+    `notebooks/03_frente_C_clasificacion.ipynb` con los pacientes de entrenamiento y se
+    copian acá. Los actuales son provisorios.
     """
 
-    # Grupos de descriptores que pueden usar las reglas. Sacar "csp" o "hrv" apaga la
-    # regla que los usa (H3 y H4).
-    grupos: tuple[str, ...] = GRUPOS_DESCRIPTORES
+    # Grupos de descriptores que pueden usar las reglas. Sacar "hrv" apaga esa parte de
+    # la regla de REM (H4). CSP está apagado por defecto: con datos reales el desempate
+    # empeoraba la clasificación (H3 lo prende para compararlo).
+    grupos: tuple[str, ...] = tuple(g for g in GRUPOS_DESCRIPTORES if g != "csp")
 
     # Canal de cada descriptor espectral (si la tabla no lo tiene, se usa el que haya).
     canal_alfa: str = "o2"
     canal_delta: str = "f4"
 
-    # W: EMG alto y alfa alto.
-    w_emg_min: float = 60.0
-    w_alfa_min: float = 60.0
-    # N3: delta alto y muchas ondas lentas.
-    n3_delta_min: float = 70.0
-    n3_ondas_min: float = 70.0
-    # REM: atonía, movimientos oculares (o LF/HF alto si se usa la HRV) y pocos husos.
-    r_emg_max: float = 35.0
-    r_eog_min: float = 60.0
-    r_lf_hf_min: float = 75.0
-    r_husos_max: float = 50.0
-    # N2: husos.
-    n2_husos_min: float = 50.0
+    # W: EMG alto y, además, ritmo α (ojos cerrados) o parpadeos (ojos abiertos).
+    w_emg_min: float = 1.5  # veces la mediana
+    w_alfa_min: float = 0.15  # fracción
+    w_eog_min: float = 3.0  # veces la mediana
+    # N3: δ relativa alta y ondas lentas.
+    n3_delta_min: float = 0.7  # fracción
+    n3_ondas_min: float = 3.0  # ondas por época
+    # REM: atonía, movimientos oculares (o LF/HF alto si se usa la HRV) y sin husos.
+    r_emg_max: float = 0.7  # veces la mediana
+    r_eog_min: float = 2.0  # veces la mediana
+    r_lf_hf_min: float = 1.5  # veces la mediana
+    r_husos_max: float = 0.0  # husos por época
+    # N2: al menos un huso.
+    n2_husos_min: float = 1.0  # husos por época
+    # Continuidad de N2 (AASM): una época sin rasgos propios que sigue a N2 sigue
+    # siendo N2, en lugar de caer en N1 por descarte.
+    continuidad_n2: bool = True
 
     # CSP: desempata N1/REM cuando la potencia CSP está lejos del punto medio entre los
-    # dos estadios (en rangos intercuartiles).
+    # dos estadios (en anchos típicos de cada estadio). Solo actúa si "csp" está en grupos.
     pares_csp: tuple[tuple[int, int], ...] = ((1, 4),)  # (N1, R)
     componentes_csp: int = 2  # Por extremo: se usan 2 * componentes_csp filtros.
     csp_margen: float = 1.0
