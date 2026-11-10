@@ -1,6 +1,6 @@
-"""Parámetros del pipeline. Los valores por defecto salen del anteproyecto, salvo
-`nlms_*`, `wiener_orden`, `ventana_plantilla_s` y `componentes_csp`, que son
-provisorios: el anteproyecto no los fija y hay que ajustarlos.
+"""Parámetros del pipeline. Los del preprocesamiento se eligieron con el análisis
+exploratorio de `notebooks/01_frente_A_senales.ipynb`. Los umbrales de clasificación y
+`componentes_csp` siguen siendo provisorios.
 
 Las hipótesis se prueban comparando configuraciones (con y sin cada etapa), por
 eso todo lo que se prende, se apaga o se compara tiene que estar acá.
@@ -20,16 +20,20 @@ GRUPOS_DESCRIPTORES = ("espectro", "husos", "ondas", "perifericos", "hrv", "csp"
 
 @dataclass(frozen=True)
 class ConfigPreprocesamiento:
-    pasa_altos_hz: float = 0.5
-    pasa_bajos_hz: float | None = None  # Se fija con el espectro de la etapa 1.
-    notch_hz: float = 50.0
+    pasa_altos_hz: float = 0.2  # Las ondas lentas se detectan desde 0,2 Hz.
+    pasa_bajos_hz: float | None = 45.0  # Sobre 40 Hz ningún descriptor usa el EEG.
+    notch_hz: float | None = 50.0  # Medido en el espectro crudo, no hay pico en 60 Hz.
+    emg_pasa_altos_hz: float = 10.0  # Recomendación de la AASM para el EMG de mentón.
     tipo_filtro: Literal["iir", "fir"] = "iir"
 
     remover_ocular: bool = True
-    metodo_ocular: Literal["nlms", "wiener"] = "nlms"
+    metodo_ocular: Literal["nlms", "wiener"] = "wiener"  # NLMS agregó potencia delta en W y REM.
     nlms_orden: int = 5
-    nlms_mu: float = 0.01
+    nlms_mu: float = 0.001
     wiener_orden: int = 5
+    umbral_artefacto_uv: float = 500.0  # Por encima, el filtro ocular no se ajusta.
+    ocular_umbral_relativo: float = 2.0  # Veces la mediana del valor eficaz del EOG.
+    ocular_ventana_s: float = 2.0
 
     remover_cardiaco: bool = True
     latidos_plantilla: int = 30
