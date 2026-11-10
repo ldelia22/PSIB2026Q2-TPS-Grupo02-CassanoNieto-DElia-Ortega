@@ -1,12 +1,12 @@
 \section{Materiales y métodos}
 
 \subsection{Base de datos}
-Se usó la HMC Sleep Staging Database v1.1~\cite{alvarez2022}, con 151 PSG de adultos registradas a \SI{256}{\hertz}. Cada registro tiene cuatro canales de EEG (F4, C4, O2 y C3, referidos a la mastoide contralateral), dos de EOG, EMG de mentón y ECG, anotados por técnicos según la AASM. Se eligieron al azar \pendiente{70} registros, separados en entrenamiento (80\,\%) y prueba (20\,\%) por paciente, de modo que ninguna época de un paciente de prueba se use para ajustar el modelo.
+Se usó la HMC Sleep Staging Database v1.1~\cite{alvarez2022}, con 151 PSG de adultos registradas a \SI{256}{\hertz}. Cada registro tiene cuatro canales de EEG (F4, C4, O2 y C3, referidos a la mastoide contralateral), dos de EOG, EMG de mentón y ECG, anotados por técnicos según la AASM. Se eligieron al azar 70 registros, con una semilla fija para que los tres integrantes trabajen con los mismos, y se separaron por paciente en 56 de entrenamiento y 14 de prueba, de modo que ninguna época de un paciente de prueba se use para ajustar el modelo. Todos los parámetros del preprocesamiento se eligieron mirando solo los pacientes de entrenamiento.
 \pendiente{Decidir si se evalúa toda la grabación o solo entre luces apagadas y encendidas.}
 
 % ---------------------------------------------------------------- Frente A
 \subsection{Preprocesamiento}
-El EEG es la señal principal del trabajo; el EOG y el ECG se usaron para limpiarlo y el ECG, además, para calcular la HRV. Cada parámetro se eligió a partir de los pacientes de entrenamiento.
+El EEG es la señal principal del trabajo. El EOG y el ECG se usaron para limpiarlo, y el ECG además para calcular la HRV.
 
 \subsubsection{Análisis exploratorio}
 Antes de diseñar los filtros se midió, en el espectro crudo de cada canal, cuánto sobresalen 50 y \SI{60}{\hertz} respecto de las frecuencias vecinas, ya que la frecuencia de la línea eléctrica depende del lugar de registro. Del encabezado EDF se leyó el rango físico de cada canal, \SI{\pm800}{\micro\volt} en el EEG, que es el valor máximo que puede tomar la señal, y los filtros del equipo, un pasa-altos de \SI{0,2}{\hertz} en todos los registros y un pasa-bajos de \SI{35}{\hertz} o \SI{128}{\hertz} según el registro. También se midió la fracción de épocas con al menos una muestra en el borde de ese rango, la correlación de cada EEG con la diferencia E1$-$E2 por estadio y el promedio del EEG sincronizado con los latidos, que revela el artefacto cardíaco porque el EEG, al no estar sincronizado con el corazón, se cancela.
@@ -17,8 +17,11 @@ El EEG y el EOG se filtraron con un pasa-altos de \SI{0,2}{\hertz}, un pasa-bajo
 \subsubsection{Remoción del artefacto ocular}
 Se usó E1$-$E2 como referencia y se compararon NLMS y el filtro de Wiener. Como la referencia también contiene ondas lentas cerebrales, se agregó una compuerta, de modo que el filtro se ajusta y se aplica solo donde el valor eficaz del EOG en \SI{2}{\second} supera el doble de su mediana en la noche. Las variantes se compararon en F4, el canal más contaminado y el que usan las reglas de N3, midiendo por estadio la potencia delta y las ondas lentas detectadas, que deberían bajar en W y REM y no cambiar en N3.
 
+\subsubsection{Detección de latidos}
+Los latidos se detectaron en el ECG con el algoritmo de Pan-Tompkins~\cite{pan1985}. La señal se filtra entre 5 y \SI{15}{\hertz}, donde se concentra la energía del QRS, se deriva, se eleva al cuadrado y se integra en una ventana de \SI{150}{\milli\second}. Los picos de esa señal se comparan con umbrales que se adaptan a lo largo de la noche. Para los registros reales se agregaron dos cambios. La polaridad del ECG se decide una vez por noche, para que el punto de referencia sea el mismo en todos los latidos, y los umbrales se reinician si pasan \SI{5}{\second} sin latidos, para que un artefacto no los deje desajustados.
+
 \subsubsection{Remoción del artefacto cardíaco}
-Los latidos se detectaron con Pan-Tompkins. Para comprobar si el artefacto era relevante, como sugirió la cátedra, se promedió el EEG entre \SI{-0,2}{\second} y \SI{0,6}{\second} alrededor de cada onda R. La actividad cerebral no está sincronizada con el latido y se cancela al promediar, mientras que el artefacto se conserva. Como control se repitió el promedio en instantes al azar. Para removerlo, en cada latido se restó una plantilla igual al promedio de los 30 latidos anteriores, excluyendo las ventanas de más de \SI{500}{\micro\volt} pico a pico.
+Para comprobar si el artefacto era relevante, como sugirió la cátedra, se promedió el EEG entre \SI{-0,2}{\second} y \SI{0,6}{\second} alrededor de cada onda R. La actividad cerebral no está sincronizada con el latido y se cancela al promediar, mientras que el artefacto se conserva. Como control se repitió el promedio en instantes al azar. Para removerlo, en cada latido se restó una plantilla igual al promedio de los 30 latidos anteriores, excluyendo las ventanas de más de \SI{500}{\micro\volt} pico a pico.
 
 \subsubsection{Segmentación}
 Siguiendo la devolución de la cátedra, se analizaron épocas fijas de \SI{30}{\second}, la unidad del hipnograma. Para identificar las épocas que mezclan dos estados se ajustó un modelo autorregresivo de orden 8 (Yule-Walker) en los primeros \SI{5}{\second} de cada época de C4 y se aplicó sin cambios a los cinco tramos de \SI{5}{\second} siguientes. La época se marcó como no estacionaria si el error de predicción de algún tramo superaba 4 veces al del primero. La marca no interviene en la clasificación.
@@ -80,7 +83,7 @@ Del EOG se usó la diferencia entre sus dos canales, E1 $-$ E2. Según el montaj
   \label{fig:eog}
 \end{figure}
 
-\pendiente{Variabilidad de la frecuencia cardíaca (HRV). Se completará cuando se complete A.}
+\textbf{HRV.} La HRV se calculó con los latidos de Pan-Tompkins en tres pasos. Primero se descartaron los latidos cuya forma no se parece a la del latido típico de la noche, que suelen ser latidos que no nacen en el nodo sinusal o detecciones sobre ruido. Para eso se filtró el ECG entre 0,5 y \SI{40}{\hertz}, se recortó cada latido entre \SI{-0,2}{\second} y \SI{0,4}{\second} alrededor de la onda R y se tomó como latido típico la mediana, muestra a muestra, de todos los latidos. Se conservaron los que tienen una correlación de 0,8 o más con ese latido típico. Después se descartaron los intervalos RR fuera de 0,3 a \SI{2}{\second} y los que se alejan más de un 20\,\% de la mediana de sus vecinos, porque suelen abarcar un latido perdido o un latido prematuro. Al descartar latidos la serie de intervalos queda con muestras irregulares, así que su espectro se estimó con el periodograma de Lomb, que no necesita interpolar. En una ventana de \SI{5}{\minute} centrada en cada época se calculó la potencia en LF y en HF~\cite{taskforce1996}, y los descriptores fueron el logaritmo de HF y el de LF/HF. Las épocas con menos de 30 intervalos válidos en la ventana toman la mediana de la noche.
 
 % ---------------------------------------------------------------- Frente C
 \subsection{Clasificación}
