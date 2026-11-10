@@ -61,6 +61,16 @@ Para cada época se calculó la matriz de covarianza $\mathbf{C}$ de los cuatro 
 \end{equation}
 Cada autovalor $\lambda$, entre 0 y 1, es la fracción de la potencia de la señal combinada que corresponde a N1. Se conservaron los dos autovectores de cada extremo, que dan las combinaciones con más potencia relativa en N1 y en REM, y el descriptor de cada época fue el logaritmo de la potencia de cada una, $\log(\mathbf{w}^\top \mathbf{C}\,\mathbf{w})$. La solución se obtiene en un solo paso, sin un entrenamiento iterativo. Como es la única etapa de la extracción de descriptores que usa las etiquetas de los técnicos, los filtros se calcularon solo con los pacientes de entrenamiento. Su uso en la clasificación se describe en la Sección~\ref{sec:clasificacion}.
 \subsubsection{EOG, EMG y HRV}
+Del EOG se usó la diferencia entre sus dos canales, E1 $-$ E2. Según el montaje de la AASM~\cite{berry2017}, E1 se ubica debajo del ojo izquierdo y E2 encima del derecho, de modo que un movimiento ocular aparece con signo opuesto en cada uno y se refuerza al restarlos, mientras que la actividad cerebral, que llega casi igual a ambos, se cancela (Fig.~\ref{fig:eog}). El descriptor fue la energía de esa diferencia en cada época, que crece con los movimientos oculares rápidos de REM. Del EMG de mentón se usó el valor eficaz de cada época, que cae con la atonía muscular de REM. Ambos se expresaron en escala logarítmica.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.8\textwidth]{b_eog_diferencia}
+  \caption{Veinte segundos de REM en los dos canales de EOG (arriba) y en su diferencia E1 $-$ E2 (abajo).}
+  \label{fig:eog}
+\end{figure}
+
+\pendiente{Variabilidad de la frecuencia cardíaca (HRV). Se completará cuando se complete A.}
 
 % ---------------------------------------------------------------- Frente C
 \subsection{Clasificación}
