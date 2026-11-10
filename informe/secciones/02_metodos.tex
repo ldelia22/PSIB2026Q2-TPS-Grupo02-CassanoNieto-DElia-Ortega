@@ -15,11 +15,62 @@ Se usó la HMC Sleep Staging Database v1.1~\cite{alvarez2022}, con 151 PSG de ad
 
 % ---------------------------------------------------------------- Frente B
 \subsection{Descriptores}
-\pendiente{Frente B: etapas 6 a 9. Figuras de \texttt{02\_frente\_B\_descriptores.ipynb} (prefijo \texttt{b\_}).}
+De cada época de \SI{30}{\second} se calcularon descriptores que resumen lo que el manual de la AASM mira para decidir el estadio, sobre la señal que entrega el preprocesamiento. Todos se guardaron en una tabla con una fila por época, junto con la matriz de covarianza de los cuatro canales de EEG, que usa el filtrado espacial CSP. El detalle de cada paso, con figuras sobre un registro de la base, está en los notebooks \texttt{02} a \texttt{02e} del repositorio.
+
 \subsubsection{Espectro multitaper}
+El periodograma de una época es un estimador muy ruidoso del espectro, porque el error en cada frecuencia es del orden de su propio valor y no disminuye aunque la época sea más larga. El método de Welch~\cite{welch1967}, visto en clase, reduce ese ruido partiendo la época en tramos y promediando sus espectros, a costa de usar tramos más cortos. El método multitaper~\cite{thomson1982,prerau2017} usa en cambio la época completa, multiplicada por $K$ ventanas de Slepian (DPSS) ortogonales entre sí, y promedia los $K$ espectros resultantes. Como las ventanas son ortogonales, esos espectros son casi independientes y la varianza del promedio baja aproximadamente $K$ veces (Fig.~\ref{fig:espectro_metodos}).
+
+Las ventanas quedan definidas por el producto $NW$ entre la duración de la época y la mitad del ancho de banda de resolución. Con $NW = 15$ y épocas de \SI{30}{\second}, la resolución es de $2W = \SI{1}{\hertz}$, y se usaron $K = 2NW - 1 = 29$ ventanas, la cantidad máxima que mantiene la energía de cada una concentrada en esa banda. Para comparar ambos métodos con la misma resolución (H1), Welch se calculó con ventanas de Hann de \SI{4}{\second} y solapamiento del 50\,\%, cuyo lóbulo principal también mide \SI{1}{\hertz}.
+
+Con el espectro de cada canal de EEG se calcularon catorce descriptores. Diez son la potencia de las bandas $\delta$ (\SIrange{0,5}{4}{\hertz}), $\theta$ (\SIrange{4}{8}{\hertz}), $\alpha$ (\SIrange{8}{13}{\hertz}), $\sigma$ (\SIrange{11}{16}{\hertz}) y $\beta$ (\SIrange{13}{30}{\hertz}), en valor absoluto y en escala logarítmica, y relativa a la potencia entre 0,5 y \SI{30}{\hertz}. Tres son los cocientes $\delta/\theta$, $\delta/\beta$ y $\theta/\alpha$, también en logaritmo, que crecen con la profundidad del sueño. El último es la pendiente del espectro, la de la recta que mejor ajusta por mínimos cuadrados el logaritmo de la potencia en función del logaritmo de la frecuencia entre 1 y \SI{40}{\hertz}~\cite{donoghue2020}. Con los cuatro canales se obtuvieron 56 descriptores espectrales por época.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.8\textwidth]{b_espectro_metodos}
+  \caption{Espectro de una época de N2 en el canal C4, estimado con el periodograma, con Welch (tramos de \SI{4}{\second}) y con multitaper (29 ventanas).}
+  \label{fig:espectro_metodos}
+\end{figure}
 \subsubsection{Husos, ondas lentas y promediado de Woody}
+\textbf{Husos.} Los husos se detectaron en el canal C4 siguiendo a Mölle et al.~\cite{molle2002}. La señal se filtró entre 11 y \SI{16}{\hertz} con un Butterworth de orden 4 aplicado hacia adelante y hacia atrás, para no desplazar los husos en el tiempo, y se calculó su envolvente con la transformada de Hilbert, suavizada con un promedio móvil de \SI{0,2}{\second}. Se consideró huso a todo tramo en que la envolvente superó durante 0,5 a \SI{2}{\second} un umbral igual a la media más 1,5 desvíos de la envolvente de toda la noche (Fig.~\ref{fig:husos}). Como el umbral es relativo a cada registro, se adapta a la amplitud del EEG de cada paciente. Cada huso se asignó a la época en que cae su centro.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.8\textwidth]{b_husos_pasos}
+  \caption{Detección de un huso en el canal C4. Arriba, la señal que entra a la etapa; en el medio, la misma señal filtrada entre 11 y \SI{16}{\hertz}; abajo, su envolvente y el umbral de la noche. La franja marca los tramos detectados como husos.}
+  \label{fig:husos}
+\end{figure}
+
+\textbf{Ondas lentas.} Las ondas lentas se detectaron en el canal F4 con el criterio visto en clase~\cite{piantoni2013}. La señal se filtró entre 0,2 y \SI{4}{\hertz} con un Butterworth de orden 2 sin desfase y se recorrió onda por onda, entre cruces descendentes por cero consecutivos. Se aceptó como onda lenta toda onda con pico negativo menor a \SI{-60}{\micro\volt} y amplitud pico a pico de al menos \SI{75}{\micro\volt}.
+
+\textbf{Promediado de Woody.} Para estimar la forma típica de las ondas lentas de cada paciente, cada onda se recortó desde \SI{1}{\second} antes hasta \SI{1}{\second} después de su pico negativo. Promediar esos recortes directamente da una forma deformada, porque el ruido corre el pico detectado y el promedio de ondas desalineadas resulta más ancho y más chico que la onda real. El método de Woody~\cite{woody1967} corrige esto de forma iterativa. Partiendo del promedio ordinario como plantilla, busca para cada onda el corrimiento de hasta \SI{0,25}{\second} que maximiza su correlación cruzada con la plantilla, recalcula la plantilla con las ondas alineadas y repite hasta que los corrimientos dejan de cambiar, con un máximo de 20 iteraciones (Fig.~\ref{fig:woody}). Las correlaciones cruzadas se calcularon con la FFT, para evaluar todos los corrimientos a la vez, y las muestras que quedan sin dato al correr una onda se excluyeron del promedio. Por último, se midió el parecido de cada onda alineada con la plantilla mediante su coeficiente de correlación.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth]{b_woody_plantilla}
+  \caption{Izquierda, ondas lentas de un paciente recortadas alrededor de su pico (gris), su promedio ordinario y la plantilla obtenida con el promediado de Woody. Derecha, corrimiento aplicado a cada onda para alinearla.}
+  \label{fig:woody}
+\end{figure}
+
+Por época se obtuvieron cinco descriptores, que son la cantidad de husos y su amplitud media, y la cantidad de ondas lentas, su amplitud pico a pico media y su parecido medio con la plantilla. Una época sin eventos toma el valor 0 en todos ellos.
 \subsubsection{Filtrado espacial CSP}
+Hasta acá cada canal de EEG se analizó por separado. Los patrones espaciales comunes (CSP)~\cite{ramoser2000} buscan, en cambio, una combinación lineal de los cuatro canales, $s(t) = \mathbf{w}^\top \mathbf{x}(t)$, cuya potencia sea lo más grande posible en un estadio y lo más chica posible en otro. Se aplicaron al par N1 y REM, que tienen un EEG parecido canal por canal y son los que más se confunden.
+
+Para cada época se calculó la matriz de covarianza $\mathbf{C}$ de los cuatro canales, a partir de la cual la potencia de la señal combinada es $\mathbf{w}^\top \mathbf{C}\,\mathbf{w}$. Con las épocas de entrenamiento se promediaron las covarianzas de N1 y de REM, cada una dividida por su traza para que no dominen las épocas de mayor amplitud, y se resolvió el problema de autovalores generalizado
+\begin{equation}
+  \mathbf{C}_{N1}\,\mathbf{w} = \lambda\,(\mathbf{C}_{N1} + \mathbf{C}_{R})\,\mathbf{w}.
+\end{equation}
+Cada autovalor $\lambda$, entre 0 y 1, es la fracción de la potencia de la señal combinada que corresponde a N1. Se conservaron los dos autovectores de cada extremo, que dan las combinaciones con más potencia relativa en N1 y en REM, y el descriptor de cada época fue el logaritmo de la potencia de cada una, $\log(\mathbf{w}^\top \mathbf{C}\,\mathbf{w})$. La solución se obtiene en un solo paso, sin un entrenamiento iterativo. Como es la única etapa de la extracción de descriptores que usa las etiquetas de los técnicos, los filtros se calcularon solo con los pacientes de entrenamiento. Su uso en la clasificación se describe en la Sección~\ref{sec:clasificacion}.
 \subsubsection{EOG, EMG y HRV}
+Del EOG se usó la diferencia entre sus dos canales, E1 $-$ E2. Según el montaje de la AASM~\cite{berry2017}, E1 se ubica debajo del ojo izquierdo y E2 encima del derecho, de modo que un movimiento ocular aparece con signo opuesto en cada uno y se refuerza al restarlos, mientras que la actividad cerebral, que llega casi igual a ambos, se cancela (Fig.~\ref{fig:eog}). El descriptor fue la energía de esa diferencia en cada época, que crece con los movimientos oculares rápidos de REM. Del EMG de mentón se usó el valor eficaz de cada época, que cae con la atonía muscular de REM. Ambos se expresaron en escala logarítmica.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.8\textwidth]{b_eog_diferencia}
+  \caption{Veinte segundos de REM en los dos canales de EOG (arriba) y en su diferencia E1 $-$ E2 (abajo).}
+  \label{fig:eog}
+\end{figure}
+
+\pendiente{Variabilidad de la frecuencia cardíaca (HRV). Se completará cuando se complete A.}
 
 % ---------------------------------------------------------------- Frente C
 \subsection{Clasificación}

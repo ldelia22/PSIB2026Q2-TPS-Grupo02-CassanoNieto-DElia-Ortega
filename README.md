@@ -30,7 +30,12 @@ actualiza al volver a correrlos.
 | Notebook | Frente | Contenido |
 |---|---|---|
 | `01_frente_A_senales.ipynb` | A | Etapas 1 a 5 |
-| `02_frente_B_descriptores.ipynb` | B | Etapas 6 a 9 |
+| `02_frente_B_descriptores.ipynb` | B | Recorrido del Frente B y tabla de descriptores |
+| `02a_frente_B_espectro.ipynb` | B | Etapa 6: multitaper, Welch, bandas y pendiente |
+| `02b_frente_B_husos.ipynb` | B | Etapa 7: detección de husos |
+| `02c_frente_B_ondas_lentas_woody.ipynb` | B | Etapa 7: ondas lentas y promediado de Woody |
+| `02d_frente_B_csp.ipynb` | B | Etapa 8: filtrado espacial CSP |
+| `02e_frente_B_eog_emg.ipynb` | B | Etapa 9: EOG y EMG |
 | `03_frente_C_clasificacion.ipynb` | C | Elección de umbrales, reglas, suavizado, métricas, hipnogramas |
 | `04_frente_C_hipotesis.ipynb` | C | H1 a H4 |
 
@@ -77,8 +82,11 @@ Registro ──► Frente A ──► RegistroPreprocesado ──► Frente B �
 
 | Frente | Etapas | Carpetas | Responsable |
 |---|---|---|---|
-| **A. Señales** | 1 a 5: exploratorio, filtrado, artefactos ocular y cardíaco, segmentación | `datos/`, `preprocesamiento/` | *a definir* |
-| **B. Descriptores** | 6 a 9: multitaper, husos, ondas lentas, Woody, CSP, EOG, EMG, HRV | `descriptores/` | *a definir* |
+| **A. Señales** | 1 a 5: exploratorio, filtrado, artefactos ocular y cardíaco, segmentación. También la HRV de la etapa 9 | `datos/`, `preprocesamiento/`, `descriptores/hrv.py` | *a definir* |
+| **B. Descriptores** | 6 a 9: multitaper, husos, ondas lentas, Woody, CSP, EOG, EMG | `descriptores/` (salvo `hrv.py`) | *a definir* |
+
+La HRV es del Frente A porque se calcula con los latidos que detecta `qrs.py`. El
+archivo queda en `descriptores/` porque su salida es un descriptor más de la tabla.
 | **C. Clasificación y resultados** | 10, 11 y sección 3: reglas AASM, suavizado, interfaz, métricas, H1 a H4 | `clasificacion/`, `evaluacion/`, `app/` | *a definir* |
 
 Nadie tiene que esperar a otro frente, porque
@@ -103,7 +111,8 @@ forma que los reales:
 | 6. Multitaper | `descriptores/espectro.py` | H1 |
 | 7. Husos y ondas lentas | `descriptores/husos.py`, `ondas_lentas.py`, `woody.py` | H2 |
 | 8. CSP | `descriptores/csp.py` | H3 |
-| 9. EOG, EMG y HRV | `descriptores/perifericos.py`, `hrv.py` | H4 |
+| 9. EOG y EMG | `descriptores/perifericos.py` | |
+| 9. HRV (Frente A) | `descriptores/hrv.py` | H4 |
 | 10. Reglas AASM y suavizado | `clasificacion/reglas.py`, `suavizado.py`, `modelo.py` | H3 |
 | 11. Interfaz | `app/streamlit_app.py` | |
 | Evaluación | `evaluacion/metricas.py`, `hipotesis.py` | H1 a H4 |
@@ -125,10 +134,14 @@ Requiere Python 3.10 o superior. Todos los comandos se corren desde `codigo/`.
 cd codigo
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -e ".[dev]"
-pip install jupyter      # Para los notebooks
+pip install -r requirements.txt
 pytest
 ```
+
+`requirements.txt` instala las dependencias, pytest, Jupyter y el paquete del TP. Las
+mismas dependencias figuran en `pyproject.toml`, así que `pip install -e ".[dev]"` también
+funciona. No se usa ninguna librería de aprendizaje automático: la devolución no lo
+permite en el TP cuatrimestral.
 
 Los tests de lo que falta implementar figuran como `skipped`. Cada función tiene su
 test en `codigo/tests/test_frente_{a,b,c}.py`: al implementarla, el test empieza a correr solo

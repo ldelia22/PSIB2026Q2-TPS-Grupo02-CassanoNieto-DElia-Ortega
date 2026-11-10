@@ -7,7 +7,7 @@ from estadios.comun.config import ConfigDescriptores
 from estadios.comun.constantes import CANALES, N1, R, W
 from estadios.comun.contratos import Registro, RegistroPreprocesado
 from estadios.comun.sintetico import preprocesado_sintetico
-from estadios.descriptores import csp, espectro, hrv, husos, ondas_lentas, perifericos, woody
+from estadios.descriptores import csp, espectro, husos, ondas_lentas, perifericos, woody
 
 FS = 256.0
 N_EPOCA = int(30 * FS)
@@ -144,38 +144,6 @@ def test_energia_y_amplitud_crecen_con_la_senal():
     assert perifericos.amplitud_por_epoca(x)[1] > perifericos.amplitud_por_epoca(x)[0]
 
 
-def test_intervalos_rr():
-    latidos = np.array([0, 256, 512, 896])
-    t, rr = hrv.intervalos_rr(latidos, FS)
-    assert len(t) == len(rr) == 3
-    assert rr == pytest.approx([1.0, 1.0, 1.5])
-
-
-@pytest.mark.parametrize("f0, domina_hf", [(0.25, True), (0.08, False)])
-def test_lomb_ubica_la_oscilacion_en_su_banda(f0, domina_hf):
-    rng = np.random.default_rng(0)
-    # Muestras irregulares: es justamente el caso que resuelve Lomb.
-    t = np.cumsum(0.9 + 0.1 * rng.random(330))
-    rr = 0.9 + 0.04 * np.sin(2 * np.pi * f0 * t)
-    lf, hf = hrv.potencias_lomb(t, rr)
-    assert (hf > lf) == domina_hf
-
-
-def test_descartar_ectopicos_quita_el_latido_deforme():
-    prep = preprocesado_sintetico(minutos=2)
-    ecg = prep.registro.senales["ECG"].copy()
-    latidos = prep.latidos
-    # El latido 20 se invierte y se ensancha: pasa a tener otra forma.
-    centro = latidos[20]
-    ancho = int(0.2 * FS)
-    t = np.arange(-ancho, ancho)
-    ecg[centro - ancho : centro + ancho] = -500 * np.exp(-0.5 * (t / (0.06 * FS)) ** 2)
-
-    conservados = hrv.descartar_ectopicos(ecg, latidos, FS)
-    assert centro not in conservados
-    assert len(conservados) >= len(latidos) - 2
-
-
 @pytest.mark.parametrize(
     "funcion, prefijo",
     [
@@ -183,7 +151,6 @@ def test_descartar_ectopicos_quita_el_latido_deforme():
         (husos.descriptores_husos, "husos."),
         (ondas_lentas.descriptores_ondas_lentas, "ondas."),
         (perifericos.descriptores_perifericos, "perifericos."),
-        (hrv.descriptores_hrv, "hrv."),
     ],
 )
 def test_cada_grupo_respeta_el_contrato(funcion, prefijo):
