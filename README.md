@@ -30,7 +30,12 @@ actualiza al volver a correrlos.
 | Notebook | Frente | Contenido |
 |---|---|---|
 | `01_frente_A_senales.ipynb` | A | Etapas 1 a 5 |
-| `02_frente_B_descriptores.ipynb` | B | Etapas 6 a 9 |
+| `02_frente_B_descriptores.ipynb` | B | Recorrido del Frente B y tabla de descriptores |
+| `02a_frente_B_espectro.ipynb` | B | Etapa 6: multitaper, Welch, bandas y pendiente |
+| `02b_frente_B_husos.ipynb` | B | Etapa 7: detección de husos |
+| `02c_frente_B_ondas_lentas_woody.ipynb` | B | Etapa 7: ondas lentas y promediado de Woody |
+| `02d_frente_B_csp.ipynb` | B | Etapa 8: filtrado espacial CSP |
+| `02e_frente_B_eog_emg.ipynb` | B | Etapa 9: EOG y EMG |
 | `03_frente_C_clasificacion.ipynb` | C | Elección de umbrales, reglas, suavizado, métricas, hipnogramas |
 | `04_frente_C_hipotesis.ipynb` | C | H1 a H4 |
 
