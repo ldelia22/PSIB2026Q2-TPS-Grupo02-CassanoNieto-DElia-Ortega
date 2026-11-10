@@ -50,26 +50,30 @@
 \textbf{Woody sobre ondas reales.} En los 55 pacientes de entrenamiento con al menos cinco ondas lentas en N3, la plantilla de Woody tuvo un valle menos profundo que el promedio ordinario (mediana de $-78{,}9$ contra \SI{-83,1}{\micro\volt}), porque cada onda se recorta centrada en su mínimo y el promedio ordinario suma ahí el ruido de todas. El algoritmo convergió antes de las 20 iteraciones en 25 pacientes. En los demás siguió moviendo unas pocas ondas muy deformadas, que saltan entre posiciones sin estabilizarse, y en el paciente mediano el 0,4\,\% de las ondas quedó en el corrimiento máximo de \SI{0,25}{\second}. Entre las épocas con ondas, la similitud con la plantilla fue parecida en todos los estadios (mediana entre 0,74 y 0,79).
 
 \subsection{Clasificación}
-\pendiente{Comentar la distribución de estadios (\texttt{c\_distribucion\_estadios}) y los umbrales elegidos (\texttt{c\_eleccion\_umbrales}).}
+De los 70 registros, 56 se usaron para elegir los umbrales y 14 para la evaluación, con 13\,127 épocas de prueba entre luces apagadas y encendidas. En esta base las grabaciones casi no tienen épocas fuera de ese período (28 en los pacientes de prueba), así que evaluar toda la noche dio el mismo acuerdo ($\kappa = 0{,}343$).
 
-% \begin{figure}[htbp]
-%   \centering
-%   \includegraphics[width=\textwidth]{c_eleccion_umbrales}
-%   \caption{Histogramas de cada descriptor en los estadios que separa cada regla (pacientes de entrenamiento). Punteada: cruce de los histogramas; roja: umbral elegido.}
-%   \label{fig:umbrales}
-% \end{figure}
+\textbf{Umbrales.} La Fig.~\ref{fig:umbrales} muestra, para cada regla, cómo se distribuye el descriptor en el estadio que detecta y en los estadios de los que lo separa. Los que mejor separaron fueron el EMG, con una mediana de 1,98 veces la de la noche en W frente a 0,94 en el resto y de 0,76 en REM frente a 1,33 en N1, y la energía del EOG, con 2,51 en REM frente a 0,67 en N1 y N2. La $\delta$ relativa en F4 separó N3 de N2 con superposición (medianas de 0,88 y 0,77). La $\alpha$ relativa en O2 (0,12 en W frente a 0,075) y el cociente LF/HF (1,29 en REM frente a 1,02) separaron poco, por lo que en ambos casos se mantuvo un umbral más exigente que el cruce. Más de la mitad de las épocas N2 no tuvo ningún huso detectado, lo que justifica la regla de continuidad. Para el umbral de ondas lentas, los valores 2 y 3 dieron un acuerdo casi igual sobre los pacientes de entrenamiento ($\kappa = 0{,}406$ y $0{,}404$), y se eligió 2, que es además el que indica el cruce de los histogramas.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth]{c_eleccion_umbrales}
+  \caption{Histogramas de cada descriptor en los estadios que separa cada regla (pacientes de entrenamiento). Punteada: cruce de los histogramas; roja: umbral elegido. EMG, EOG y LF/HF en escala logarítmica.}
+  \label{fig:umbrales}
+\end{figure}
+
+\textbf{Acuerdo con los técnicos.} El clasificador final, con reglas y suavizado por continuidad, alcanzó $\kappa = 0{,}343$ sobre los pacientes de prueba (Tabla~\ref{tab:resultados}), frente a $0{,}406$ sobre los de entrenamiento. Como las reglas no se ajustan con los datos, esa diferencia refleja la variabilidad entre pacientes y no un sobreajuste: el $\kappa$ por paciente tuvo una mediana de 0,28 (cuartiles 0,22 y 0,43) y fue de 0,16 a 0,55 (Fig.~\ref{fig:kappa_pacientes}). REM y W fueron los estadios mejor reconocidos (F1 de 0,61 y 0,58), y N1 el peor (0,18).
 
 \begin{table}[htbp]
   \centering
-  \caption{Acuerdo con los técnicos sobre los \pendiente{14} pacientes de prueba.}
+  \caption{Acuerdo con los técnicos sobre los 14 pacientes de prueba.}
   \label{tab:resultados}
   \begin{tabular}{lcccccc}
     \toprule
     & $\kappa$ & F1 W & F1 N1 & F1 N2 & F1 N3 & F1 REM \\
     \midrule
-    Reglas                  & -- & -- & -- & -- & -- & -- \\
-    Reglas + moda           & -- & -- & -- & -- & -- & -- \\
-    Reglas + continuidad    & -- & -- & -- & -- & -- & -- \\
+    Reglas                  & 0,330 & 0,57 & 0,19 & 0,50 & 0,50 & 0,57 \\
+    Reglas + moda           & 0,339 & 0,57 & 0,17 & 0,51 & 0,52 & 0,61 \\
+    Reglas + continuidad    & \textbf{0,343} & 0,58 & 0,18 & 0,50 & 0,52 & 0,61 \\
     \midrule
     Técnicos HMC~\cite{alvarez2021}        & 0,74 & & & & & \\
     Red de referencia~\cite{alvarez2021}   & 0,79 & & & & & \\
@@ -77,32 +81,45 @@
   \end{tabular}
 \end{table}
 
-% \begin{figure}[htbp]
-%   \centering
-%   \includegraphics[width=\textwidth]{c_matrices_confusion}
-%   \caption{Matrices de confusión normalizadas por fila (estadio de los técnicos).}
-%   \label{fig:confusion}
-% \end{figure}
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.5\textwidth]{c_kappa_por_paciente}
+  \caption{$\kappa$ de cada paciente de prueba, sin suavizado y con suavizado por continuidad.}
+  \label{fig:kappa_pacientes}
+\end{figure}
 
-% \begin{figure}[htbp]
-%   \centering
-%   \includegraphics[width=\textwidth]{c_hipnograma_SNxxx}
-%   \caption{Hipnograma de un paciente de prueba: técnicos, reglas y reglas con suavizado.}
-%   \label{fig:hipnograma}
-% \end{figure}
+\textbf{Errores.} La matriz de confusión (Fig.~\ref{fig:confusion}) muestra cuatro errores principales: épocas N2 asignadas a N3 (1067) y a N1 (909), épocas N1 asignadas a W (616) y épocas REM asignadas a N1 (415). La sensibilidad fue del 61\,\% en W, 21\,\% en N1, 43\,\% en N2, 62\,\% en N3 y 56\,\% en REM.
 
-% \begin{figure}[htbp]
-%   \centering
-%   \includegraphics[width=0.7\textwidth]{c_uso_reglas}
-%   \caption{Cantidad de épocas de prueba que decidió cada regla y fracción de aciertos.}
-%   \label{fig:uso_reglas}
-% \end{figure}
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth]{c_matrices_confusion}
+  \caption{Matrices de confusión sobre los pacientes de prueba, normalizadas por fila (estadio de los técnicos), sin suavizado y con suavizado por continuidad.}
+  \label{fig:confusion}
+\end{figure}
+
+\textbf{Qué regla decidió cada época.} La Fig.~\ref{fig:uso_reglas} muestra cuántas épocas de prueba asignó cada regla y qué fracción coincidió con los técnicos. La regla de REM acertó el 61\,\%, la de N2 el 59\,\%, la continuidad de N2 el 60\,\%, la de W el 53\,\% y la de N3 el 44\,\%. N1, asignado por descarte a 2455 épocas, acertó solo el 16\,\%.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.6\textwidth]{c_uso_reglas}
+  \caption{Cantidad de épocas de prueba que decidió cada regla y fracción de aciertos.}
+  \label{fig:uso_reglas}
+\end{figure}
+
+\textbf{Suavizado.} Las reglas de continuidad cambiaron 1343 épocas: corrigieron 465 errores e introdujeron 327. El filtro de moda cambió 2387, con 780 correcciones y 674 errores nuevos. El suavizado por reglas tuvo el mejor balance, aunque su aporte a $\kappa$ fue chico (de 0,330 a 0,343). La Fig.~\ref{fig:hipnograma} muestra su efecto sobre un paciente de prueba.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth]{c_hipnograma_SN006}
+  \caption{Hipnograma de un paciente de prueba: técnicos, reglas y reglas con suavizado por continuidad.}
+  \label{fig:hipnograma}
+\end{figure}
 
 \subsection{Verificación de hipótesis}
 
 \begin{table}[htbp]
   \centering
-  \caption{Comparaciones paciente por paciente (Wilcoxon).}
+  \caption{Comparaciones paciente por paciente sobre los 14 pacientes de prueba: mediana de cada variante y $p$ de la prueba de Wilcoxon. Con 14 pacientes, el menor $p$ posible es 0,0001, cuando todos van en el mismo sentido.}
   \label{tab:hipotesis}
   \begin{tabular}{llccc}
     \toprule
@@ -111,10 +128,27 @@
     H1 & Variación por banda     & Multitaper: 0,142 & Welch: 0,148      & 0,0001 \\
        & Variación por frecuencia & Multitaper: 0,182 & Welch: 0,220     & 0,0001 \\
     H2 & Error de forma          & Woody: 0,28      & Promedio: 0,42   & 0,049 \\
-    H3 & F1 de N1                & Con desempate: 0,21 & Sin desempate: 0,20 & 0,13 \\
-       & F1 de REM               & Con desempate: 0,54 & Sin desempate: 0,58 & 0,033 \\
-    H4 & Residuo cardíaco (\si{\micro\volt}) & Después: -- & Antes: -- & -- \\
-       & $\kappa$                & Con etapas: -- & Sin etapas: -- & -- \\
+    H3 & F1 de N1                & Con desempate: 0,16 & Sin desempate: 0,14 & 0,060 \\
+       & F1 de REM               & Con desempate: 0,46 & Sin desempate: 0,57 & 0,009 \\
+    H4 & Residuo cardíaco (\si{\micro\volt}) & Después: 1,2 & Antes: 19,5 & 0,0001 \\
+       & $\kappa$                & Con etapas: 0,28 & Sin etapas: 0,29 & 0,54 \\
     \bottomrule
   \end{tabular}
 \end{table}
+
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}{0.32\textwidth}\includegraphics[width=\linewidth]{h_h1_frecuencias}\caption{H1, por frecuencia.}\end{subfigure}
+  \hfill
+  \begin{subfigure}{0.32\textwidth}\includegraphics[width=\linewidth]{h_h2}\caption{H2.}\end{subfigure}
+  \hfill
+  \begin{subfigure}{0.32\textwidth}\includegraphics[width=\linewidth]{h_h3_r}\caption{H3, F1 de REM.}\end{subfigure}
+
+  \begin{subfigure}{0.32\textwidth}\includegraphics[width=\linewidth]{h_h4_residuo}\caption{H4, residuo cardíaco.}\end{subfigure}
+  \hfill
+  \begin{subfigure}{0.32\textwidth}\includegraphics[width=\linewidth]{h_h4_kappa}\caption{H4, $\kappa$.}\end{subfigure}
+  \hfill
+  \begin{subfigure}{0.32\textwidth}\includegraphics[width=\linewidth]{h_h3_n1}\caption{H3, F1 de N1.}\end{subfigure}
+  \caption{Verificación de hipótesis. Cada línea gris une los dos valores de un paciente de prueba.}
+  \label{fig:hipotesis}
+\end{figure}

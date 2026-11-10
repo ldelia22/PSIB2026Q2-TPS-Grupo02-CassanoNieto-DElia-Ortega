@@ -1,4 +1,8 @@
 \section{Conclusiones}
-\pendiente{Conclusiones.}
+Se desarrolló un clasificador de estadios de sueño sin técnicas de inteligencia artificial, que asigna cada época de 30~s con cinco reglas inspiradas en el manual AASM y un suavizado por reglas de continuidad, y una interfaz gráfica que muestra cada etapa del procesamiento y la regla que decidió cada época. Sobre 14 pacientes de prueba alcanzó $\kappa = 0{,}343$, por debajo del acuerdo entre técnicos (0,74), con REM y vigilia como los estadios mejor reconocidos y N1 como el más difícil, igual que para los técnicos.
+
+De las técnicas nuevas, el espectro multitaper redujo la variabilidad entre épocas respecto de Welch (H1), sobre todo frecuencia por frecuencia, y el promediado de Woody recuperó mejor la forma de las ondas lentas (H2), aunque con un margen estrecho. El filtrado espacial CSP no mejoró la separación de N1 y REM (H3), y la remoción del artefacto cardíaco funcionó pero no cambió el acuerdo (H4).
+
+Más allá del valor de $\kappa$, el enfoque por reglas permitió explicar cada decisión y cada error a partir de propiedades medibles de las señales, que era el objetivo planteado. En particular, mostró que los descriptores deben compararse en sus propias unidades y no en percentiles de la noche, y que la vigilia con movimiento y la frontera entre N2 y N3 son las principales fuentes de error.
 
 \textbf{Trabajo futuro.} Para la instancia final, donde sí se permiten técnicas de inteligencia artificial, se propone retomar el esquema del anteproyecto: un LDA sobre los mismos descriptores y un HMM con Viterbi para la corrección temporal, y compararlos con el clasificador por reglas sobre los mismos pacientes de prueba.
