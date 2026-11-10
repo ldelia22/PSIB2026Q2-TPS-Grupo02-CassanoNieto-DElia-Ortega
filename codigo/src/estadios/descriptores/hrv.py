@@ -72,8 +72,8 @@ def filtrar_intervalos(t: np.ndarray, rr: np.ndarray) -> tuple[np.ndarray, np.nd
     return t[validos], rr[validos]
 
 
-def potencias_lomb(t: np.ndarray, rr: np.ndarray) -> tuple[float, float]:
-    """Potencia en LF y en HF de una ventana.
+def periodograma_lomb(t: np.ndarray, rr: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """Frecuencias entre el inicio de LF y el final de HF, y la PSD de los intervalos en s²/Hz.
 
     Lomb no necesita muestras equiespaciadas, así que no hay que interpolar la serie
     de intervalos ni rellenar los latidos descartados.
@@ -81,7 +81,12 @@ def potencias_lomb(t: np.ndarray, rr: np.ndarray) -> tuple[float, float]:
     frecuencias = np.arange(BANDA_LF[0], BANDA_HF[1] + PASO_FRECUENCIA_HZ, PASO_FRECUENCIA_HZ)
     periodograma = signal.lombscargle(t, rr - rr.mean(), 2 * np.pi * frecuencias)
     # Con esta escala, la integral del espectro equivale a la varianza de la serie.
-    psd = 2 * (t[-1] - t[0]) / len(t) * periodograma
+    return frecuencias, 2 * (t[-1] - t[0]) / len(t) * periodograma
+
+
+def potencias_lomb(t: np.ndarray, rr: np.ndarray) -> tuple[float, float]:
+    """Potencia en LF y en HF de una ventana."""
+    frecuencias, psd = periodograma_lomb(t, rr)
 
     def potencia(banda: tuple[float, float]) -> float:
         return float(psd[(frecuencias >= banda[0]) & (frecuencias < banda[1])].sum() * PASO_FRECUENCIA_HZ)
