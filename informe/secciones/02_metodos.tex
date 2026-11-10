@@ -53,6 +53,13 @@ Con el espectro de cada canal de EEG se calcularon catorce descriptores. Diez so
 
 Por época se obtuvieron cinco descriptores, que son la cantidad de husos y su amplitud media, y la cantidad de ondas lentas, su amplitud pico a pico media y su parecido medio con la plantilla. Una época sin eventos toma el valor 0 en todos ellos.
 \subsubsection{Filtrado espacial CSP}
+Hasta acá cada canal de EEG se analizó por separado. Los patrones espaciales comunes (CSP)~\cite{ramoser2000} buscan, en cambio, una combinación lineal de los cuatro canales, $s(t) = \mathbf{w}^\top \mathbf{x}(t)$, cuya potencia sea lo más grande posible en un estadio y lo más chica posible en otro. Se aplicaron al par N1 y REM, que tienen un EEG parecido canal por canal y son los que más se confunden.
+
+Para cada época se calculó la matriz de covarianza $\mathbf{C}$ de los cuatro canales, a partir de la cual la potencia de la señal combinada es $\mathbf{w}^\top \mathbf{C}\,\mathbf{w}$. Con las épocas de entrenamiento se promediaron las covarianzas de N1 y de REM, cada una dividida por su traza para que no dominen las épocas de mayor amplitud, y se resolvió el problema de autovalores generalizado
+\begin{equation}
+  \mathbf{C}_{N1}\,\mathbf{w} = \lambda\,(\mathbf{C}_{N1} + \mathbf{C}_{R})\,\mathbf{w}.
+\end{equation}
+Cada autovalor $\lambda$, entre 0 y 1, es la fracción de la potencia de la señal combinada que corresponde a N1. Se conservaron los dos autovectores de cada extremo, que dan las combinaciones con más potencia relativa en N1 y en REM, y el descriptor de cada época fue el logaritmo de la potencia de cada una, $\log(\mathbf{w}^\top \mathbf{C}\,\mathbf{w})$. La solución se obtiene en un solo paso, sin un entrenamiento iterativo. Como es la única etapa de la extracción de descriptores que usa las etiquetas de los técnicos, los filtros se calcularon solo con los pacientes de entrenamiento. Su uso en la clasificación se describe en la Sección~\ref{sec:clasificacion}.
 \subsubsection{EOG, EMG y HRV}
 
 % ---------------------------------------------------------------- Frente C
