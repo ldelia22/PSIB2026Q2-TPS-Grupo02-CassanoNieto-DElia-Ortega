@@ -77,8 +77,11 @@ Registro ──► Frente A ──► RegistroPreprocesado ──► Frente B �
 
 | Frente | Etapas | Carpetas | Responsable |
 |---|---|---|---|
-| **A. Señales** | 1 a 5: exploratorio, filtrado, artefactos ocular y cardíaco, segmentación | `datos/`, `preprocesamiento/` | *a definir* |
-| **B. Descriptores** | 6 a 9: multitaper, husos, ondas lentas, Woody, CSP, EOG, EMG, HRV | `descriptores/` | *a definir* |
+| **A. Señales** | 1 a 5: exploratorio, filtrado, artefactos ocular y cardíaco, segmentación. También la HRV de la etapa 9 | `datos/`, `preprocesamiento/`, `descriptores/hrv.py` | *a definir* |
+| **B. Descriptores** | 6 a 9: multitaper, husos, ondas lentas, Woody, CSP, EOG, EMG | `descriptores/` (salvo `hrv.py`) | *a definir* |
+
+La HRV es del Frente A porque se calcula con los latidos que detecta `qrs.py`. El
+archivo queda en `descriptores/` porque su salida es un descriptor más de la tabla.
 | **C. Clasificación y resultados** | 10, 11 y sección 3: reglas AASM, suavizado, interfaz, métricas, H1 a H4 | `clasificacion/`, `evaluacion/`, `app/` | *a definir* |
 
 Nadie tiene que esperar a otro frente, porque
@@ -103,7 +106,8 @@ forma que los reales:
 | 6. Multitaper | `descriptores/espectro.py` | H1 |
 | 7. Husos y ondas lentas | `descriptores/husos.py`, `ondas_lentas.py`, `woody.py` | H2 |
 | 8. CSP | `descriptores/csp.py` | H3 |
-| 9. EOG, EMG y HRV | `descriptores/perifericos.py`, `hrv.py` | H4 |
+| 9. EOG y EMG | `descriptores/perifericos.py` | |
+| 9. HRV (Frente A) | `descriptores/hrv.py` | H4 |
 | 10. Reglas AASM y suavizado | `clasificacion/reglas.py`, `suavizado.py`, `modelo.py` | H3 |
 | 11. Interfaz | `app/streamlit_app.py` | |
 | Evaluación | `evaluacion/metricas.py`, `hipotesis.py` | H1 a H4 |

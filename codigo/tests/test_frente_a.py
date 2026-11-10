@@ -3,9 +3,10 @@
 import numpy as np
 import pytest
 
-from estadios.comun.config import ConfigPreprocesamiento
+from estadios.comun.config import ConfigDescriptores, ConfigPreprocesamiento
 from estadios.comun.constantes import ECG
 from estadios.comun.sintetico import preprocesado_sintetico, registro_sintetico
+from estadios.descriptores import hrv
 from estadios.preprocesamiento import cardiaco, exploratorio, filtrado, ocular, qrs, segmentacion
 
 FS = 256.0
@@ -105,3 +106,46 @@ def test_marcar_no_estacionarias_devuelve_una_marca_por_epoca():
     marcas = segmentacion.marcar_no_estacionarias(registro, ConfigPreprocesamiento())
     assert marcas.shape == (registro.n_epocas,)
     assert marcas.dtype == bool
+
+
+# La HRV es del Frente A aunque el módulo esté en descriptores/: usa los latidos de qrs.py.
+
+
+def test_intervalos_rr():
+    latidos = np.array([0, 256, 512, 896])
+    t, rr = hrv.intervalos_rr(latidos, FS)
+    assert len(t) == len(rr) == 3
+    assert rr == pytest.approx([1.0, 1.0, 1.5])
+
+
+@pytest.mark.parametrize("f0, domina_hf", [(0.25, True), (0.08, False)])
+def test_lomb_ubica_la_oscilacion_en_su_banda(f0, domina_hf):
+    rng = np.random.default_rng(0)
+    # Muestras irregulares: es justamente el caso que resuelve Lomb.
+    t = np.cumsum(0.9 + 0.1 * rng.random(330))
+    rr = 0.9 + 0.04 * np.sin(2 * np.pi * f0 * t)
+    lf, hf = hrv.potencias_lomb(t, rr)
+    assert (hf > lf) == domina_hf
+
+
+def test_descartar_ectopicos_quita_el_latido_deforme():
+    prep = preprocesado_sintetico(minutos=2)
+    ecg = prep.registro.senales["ECG"].copy()
+    latidos = prep.latidos
+    # El latido 20 se invierte y se ensancha: pasa a tener otra forma.
+    centro = latidos[20]
+    ancho = int(0.2 * FS)
+    t = np.arange(-ancho, ancho)
+    ecg[centro - ancho : centro + ancho] = -500 * np.exp(-0.5 * (t / (0.06 * FS)) ** 2)
+
+    conservados = hrv.descartar_ectopicos(ecg, latidos, FS)
+    assert centro not in conservados
+    assert len(conservados) >= len(latidos) - 2
+
+
+def test_descriptores_hrv_respetan_el_contrato():
+    prep = preprocesado_sintetico(minutos=10)
+    matriz, nombres = hrv.descriptores_hrv(prep, ConfigDescriptores())
+    assert matriz.shape == (prep.registro.n_epocas, len(nombres))
+    assert all(n.startswith("hrv.") for n in nombres)
+    assert np.isfinite(matriz).all()
