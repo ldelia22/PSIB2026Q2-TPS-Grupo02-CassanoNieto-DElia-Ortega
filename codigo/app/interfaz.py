@@ -513,7 +513,7 @@ class Aplicacion(tk.Tk):
     def _armar_paso_clasificador(self, padre):
         marco = ttk.LabelFrame(padre, text=" 3 · Clasificador ", padding=12)
         marco.pack(fill="x", pady=(10, 0))
-        ttk.Label(marco, text="Reglas AASM sobre percentiles de la noche. Suavizado temporal", style="Sub.TLabel",
+        ttk.Label(marco, text="Reglas AASM sobre los descriptores en sus unidades. Suavizado temporal", style="Sub.TLabel",
                   wraplength=330).pack(anchor="w")
         fila = ttk.Frame(marco)
         fila.pack(fill="x", pady=(4, 4))
@@ -1202,7 +1202,7 @@ class Aplicacion(tk.Tk):
         fila("Regla que decidió la época", reglas.REGLAS[c["regla"][e]])
         fila("Reglas sin suavizar", nombre_estadio(int(c["sin_suavizar"][e])))
         for nombre, valores in c["percentiles"].items():
-            fila(f"Percentil de {NOMBRE_PERCENTIL.get(nombre, nombre)}", numero(float(valores[e]), 1))
+            fila(f"{NOMBRE_PERCENTIL.get(nombre, nombre)} (valor de la regla)", numero(float(valores[e]), 2))
         for estadio, f1 in c["reporte"]["f1"].items():
             fila(f"F1 de {estadio}", numero(f1, 3))
 
