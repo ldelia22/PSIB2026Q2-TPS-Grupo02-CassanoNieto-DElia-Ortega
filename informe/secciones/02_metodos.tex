@@ -130,7 +130,21 @@ Las reglas deciden cada época por separado, pero los estadios duran varios minu
 
 \subsubsection{Interfaz gráfica}
 Se desarrolló una aplicación de escritorio con Tkinter (\texttt{codigo/app/interfaz.py}). No tiene lógica propia y llama a las mismas funciones del pipeline, de modo que lo que muestra es lo que se evalúa. En el panel izquierdo se elige el registro y la época, se configura el suavizado y el desempate con CSP, y se procesa el registro en segundo plano mientras un registro de avance informa cada etapa. Arriba se muestra el hipnograma de los técnicos, que permite ir a cualquier época con un click. Las pestañas muestran los ocho canales crudos de la época, cada etapa del preprocesamiento sobre el canal elegido (filtrado, compuerta ocular, plantilla cardíaca y marca de no estacionariedad), los latidos con el descarte por forma, los intervalos RR y el periodograma de Lomb, y la clasificación, con el hipnograma estimado frente al de los técnicos, la matriz de confusión, el $\kappa$ del registro y la regla que decidió cada época y el valor de los descriptores que usa.
-\pendiente{Captura de pantalla de cada pestaña.}
+La Fig.~\ref{fig:interfaz} muestra cuatro de sus pestañas.
+
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}{0.49\textwidth}\includegraphics[width=\linewidth]{interfaz_senales}\caption{Señales: los ocho canales crudos de la época.}\end{subfigure}
+  \hfill
+  \begin{subfigure}{0.49\textwidth}\includegraphics[width=\linewidth]{interfaz_preprocesamiento}\caption{Preprocesamiento: un canal de EEG después de cada etapa.}\end{subfigure}
+
+  \vspace{0.5em}
+  \begin{subfigure}{0.49\textwidth}\includegraphics[width=\linewidth]{interfaz_hrv}\caption{Latidos y HRV: latidos detectados, conservados y descartados.}\end{subfigure}
+  \hfill
+  \begin{subfigure}{0.49\textwidth}\includegraphics[width=\linewidth]{interfaz_clasificacion}\caption{Clasificación: hipnogramas, matriz de confusión, uso de reglas y valores de la época.}\end{subfigure}
+  \caption{Interfaz gráfica sobre el registro SN006, de prueba, en la primera época. Arriba de cada pestaña, el hipnograma de los técnicos permite ir a cualquier época con un click. La época es vigilia con movimientos, con deflexiones lentas de hasta \SI{250}{\micro\volt} en el EEG: tiene $\delta$ relativa y ondas lentas propias de N3, pero el EMG y los parpadeos la asignan a W, porque esa regla se evalúa primero. El $\kappa$ de la pestaña de clasificación (0,25) es el de este paciente.}
+  \label{fig:interfaz}
+\end{figure}
 
 \subsection{Evaluación}
 \label{sec:evaluacion}
