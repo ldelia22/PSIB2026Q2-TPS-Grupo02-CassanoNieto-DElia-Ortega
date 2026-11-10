@@ -109,9 +109,9 @@ Las reglas se evalúan en el orden de la Tabla~\ref{tab:reglas} y cada época se
     \toprule
     Orden & Estadio & Condición & Fundamento fisiológico \\
     \midrule
-    1 & W   & EMG $\geq$ \pendiente{1,5} y ($\alpha_\text{rel}$(O2) $\geq$ \pendiente{0,15} o EOG $\geq$ \pendiente{3}) & Tono muscular; ritmo $\alpha$ o parpadeos \\
-    2 & N3  & $\delta_\text{rel}$(F4) $\geq$ \pendiente{0,7} y ondas lentas $\geq$ \pendiente{3} & Ondas lentas de gran amplitud \\
-    3 & REM & EMG $\leq$ \pendiente{0,7}, EOG $\geq$ \pendiente{2} (o LF/HF $\geq$ \pendiente{1,5}) & Atonía, movimientos oculares \\
+    1 & W   & EMG $\geq 1{,}3$ y ($\alpha_\text{rel}$(O2) $\geq 0{,}15$ o EOG $\geq 1{,}5$) & Tono muscular; ritmo $\alpha$ o parpadeos \\
+    2 & N3  & $\delta_\text{rel}$(F4) $\geq 0{,}82$ y ondas lentas $\geq 2$ & Ondas lentas de gran amplitud \\
+    3 & REM & EMG $\leq 1{,}0$, EOG $\geq 1{,}6$ (o LF/HF $\geq 1{,}5$) & Atonía, movimientos oculares \\
         &     & y ningún huso & y predominio simpático \\
     4 & N2  & al menos un huso & Husos de sueño \\
     5 & N1  & ninguna de las anteriores & Estadio de transición \\
@@ -121,7 +121,7 @@ Las reglas se evalúan en el orden de la Tabla~\ref{tab:reglas} y cada época se
 
 \textbf{Continuidad de N2.} Muchas épocas de N2 no contienen husos y, sin otra regla, caerían en N1 por descarte. Siguiendo el criterio de continuidad de la AASM~\cite{berry2017}, una época asignada a N1 por descarte que sigue a una época N2 se asignó a N2; la regla se aplica en orden temporal, de modo que se propaga hasta que otra regla (vigilia, REM o N3) interrumpe la secuencia.
 
-\textbf{Elección de los umbrales.} Para cada regla se graficó, con los pacientes de entrenamiento, el histograma del descriptor en el estadio que la regla detecta y en los estadios de los que debe separarlo (por ejemplo, la $\delta$ relativa en N3 frente a N2). El umbral se fijó en la zona donde los histogramas se cruzan (Fig.~\pendiente{ref}). Se trata de una decisión del diseñador tomada a partir de un gráfico, igual que la elección de la frecuencia de corte de un filtro, y no de un ajuste automático: no se hizo ninguna búsqueda sobre combinaciones de umbrales para maximizar el acuerdo, y los pacientes de prueba no se usaron en ningún momento.
+\textbf{Elección de los umbrales.} Para cada regla se graficó, con los pacientes de entrenamiento, el histograma del descriptor en el estadio que la regla detecta y en los estadios de los que debe separarlo (por ejemplo, la $\delta$ relativa en N3 frente a N2). El umbral se fijó en la zona donde los histogramas se cruzan (Fig.~\pendiente{ref}). Donde el descriptor separa poco y actúa como alternativa dentro de su regla ($\alpha$ en la vigilia y LF/HF en REM), se mantuvo un umbral más exigente que el cruce, para no agregar falsos positivos. Se trata de una decisión del diseñador tomada a partir de un gráfico, igual que la elección de la frecuencia de corte de un filtro, y no de un ajuste automático: no se hizo ninguna búsqueda sobre combinaciones de umbrales para maximizar el acuerdo, y los pacientes de prueba no se usaron en ningún momento.
 
 \textbf{Desempate entre N1 y REM con CSP.} N1 y REM tienen un EEG parecido y son el par que más se confunde. Para ellos se evaluó usar la señal CSP de la etapa~8: su log-potencia en cada época es alta cuando la época se parece a N1 y baja cuando se parece a REM. Una época asignada a uno de estos dos estadios se cambia al otro solo si su puntaje CSP queda claramente del otro lado del punto medio entre las medianas de ambos estadios, a más de \pendiente{1} vez el ancho típico de cada estadio (el promedio de sus rangos intercuartiles). El punto medio y el ancho se calculan con las mismas épocas de entrenamiento con que se obtienen los filtros CSP. Con los registros reales, los puntajes de N1 y REM se superpusieron casi por completo y el desempate empeoró la clasificación, por lo que el clasificador final no lo usa; su efecto se cuantifica en la verificación de H3.
 

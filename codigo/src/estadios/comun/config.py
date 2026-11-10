@@ -70,9 +70,11 @@ class ConfigClasificacion:
     - EMG, EOG y LF/HF: veces la mediana de la noche del paciente (1 = lo típico de
       esa noche), porque dependen de la amplitud y del electrodo.
 
-    Los valores se eligen mirando los histogramas de
-    `notebooks/03_frente_C_clasificacion.ipynb` con los pacientes de entrenamiento y se
-    copian acá. Los actuales son provisorios.
+    Los valores se eligieron mirando los histogramas de
+    `notebooks/03_frente_C_clasificacion.ipynb` con los 56 pacientes de entrenamiento
+    (cruce de histogramas y medianas de cada grupo). Donde un descriptor separa poco
+    (α para W, LF/HF para REM) se dejó un umbral más exigente que el cruce, porque es
+    una alternativa dentro de su regla y bajarlo agrega falsos positivos.
     """
 
     # Grupos de descriptores que pueden usar las reglas. Sacar "hrv" apaga esa parte de
@@ -85,16 +87,16 @@ class ConfigClasificacion:
     canal_delta: str = "f4"
 
     # W: EMG alto y, además, ritmo α (ojos cerrados) o parpadeos (ojos abiertos).
-    w_emg_min: float = 1.5  # veces la mediana
-    w_alfa_min: float = 0.15  # fracción
-    w_eog_min: float = 3.0  # veces la mediana
+    w_emg_min: float = 1.3  # veces la mediana (cruce 1,29)
+    w_alfa_min: float = 0.15  # fracción (cruce 0,11; separa poco)
+    w_eog_min: float = 1.5  # veces la mediana (cruce 1,33)
     # N3: δ relativa alta y ondas lentas.
-    n3_delta_min: float = 0.7  # fracción
-    n3_ondas_min: float = 3.0  # ondas por época
+    n3_delta_min: float = 0.82  # fracción (cruce 0,825)
+    n3_ondas_min: float = 2.0  # ondas por época (cruce 1,4; con 3, κ de entrenamiento 0,404 contra 0,406)
     # REM: atonía, movimientos oculares (o LF/HF alto si se usa la HRV) y sin husos.
-    r_emg_max: float = 0.7  # veces la mediana
-    r_eog_min: float = 2.0  # veces la mediana
-    r_lf_hf_min: float = 1.5  # veces la mediana
+    r_emg_max: float = 1.0  # veces la mediana (cruce 1,06)
+    r_eog_min: float = 1.6  # veces la mediana (cruce 1,62)
+    r_lf_hf_min: float = 1.5  # veces la mediana (cruce 1,14; separa poco)
     r_husos_max: float = 0.0  # husos por época
     # N2: al menos un huso.
     n2_husos_min: float = 1.0  # husos por época
