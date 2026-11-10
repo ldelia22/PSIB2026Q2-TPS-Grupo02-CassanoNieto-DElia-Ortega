@@ -15,8 +15,21 @@ Se usó la HMC Sleep Staging Database v1.1~\cite{alvarez2022}, con 151 PSG de ad
 
 % ---------------------------------------------------------------- Frente B
 \subsection{Descriptores}
-\pendiente{Frente B: etapas 6 a 9. Figuras de \texttt{02\_frente\_B\_descriptores.ipynb} (prefijo \texttt{b\_}).}
+De cada época de \SI{30}{\second} se calcularon descriptores que resumen lo que el manual de la AASM mira para decidir el estadio, sobre la señal que entrega el preprocesamiento. Todos se guardaron en una tabla con una fila por época, junto con la matriz de covarianza de los cuatro canales de EEG, que usa el filtrado espacial CSP. El detalle de cada paso, con figuras sobre un registro de la base, está en los notebooks \texttt{02} a \texttt{02e} del repositorio.
+
 \subsubsection{Espectro multitaper}
+El periodograma de una época es un estimador muy ruidoso del espectro, porque el error en cada frecuencia es del orden de su propio valor y no disminuye aunque la época sea más larga. El método de Welch~\cite{welch1967}, visto en clase, reduce ese ruido partiendo la época en tramos y promediando sus espectros, a costa de usar tramos más cortos. El método multitaper~\cite{thomson1982,prerau2017} usa en cambio la época completa, multiplicada por $K$ ventanas de Slepian (DPSS) ortogonales entre sí, y promedia los $K$ espectros resultantes. Como las ventanas son ortogonales, esos espectros son casi independientes y la varianza del promedio baja aproximadamente $K$ veces (Fig.~\ref{fig:espectro_metodos}).
+
+Las ventanas quedan definidas por el producto $NW$ entre la duración de la época y la mitad del ancho de banda de resolución. Con $NW = 15$ y épocas de \SI{30}{\second}, la resolución es de $2W = \SI{1}{\hertz}$, y se usaron $K = 2NW - 1 = 29$ ventanas, la cantidad máxima que mantiene la energía de cada una concentrada en esa banda. Para comparar ambos métodos con la misma resolución (H1), Welch se calculó con ventanas de Hann de \SI{4}{\second} y solapamiento del 50\,\%, cuyo lóbulo principal también mide \SI{1}{\hertz}.
+
+Con el espectro de cada canal de EEG se calcularon catorce descriptores. Diez son la potencia de las bandas $\delta$ (\SIrange{0,5}{4}{\hertz}), $\theta$ (\SIrange{4}{8}{\hertz}), $\alpha$ (\SIrange{8}{13}{\hertz}), $\sigma$ (\SIrange{11}{16}{\hertz}) y $\beta$ (\SIrange{13}{30}{\hertz}), en valor absoluto y en escala logarítmica, y relativa a la potencia entre 0,5 y \SI{30}{\hertz}. Tres son los cocientes $\delta/\theta$, $\delta/\beta$ y $\theta/\alpha$, también en logaritmo, que crecen con la profundidad del sueño. El último es la pendiente del espectro, la de la recta que mejor ajusta por mínimos cuadrados el logaritmo de la potencia en función del logaritmo de la frecuencia entre 1 y \SI{40}{\hertz}~\cite{donoghue2020}. Con los cuatro canales se obtuvieron 56 descriptores espectrales por época.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.8\textwidth]{b_espectro_metodos}
+  \caption{Espectro de una época de N2 en el canal C4, estimado con el periodograma, con Welch (tramos de \SI{4}{\second}) y con multitaper (29 ventanas).}
+  \label{fig:espectro_metodos}
+\end{figure}
 \subsubsection{Husos, ondas lentas y promediado de Woody}
 \subsubsection{Filtrado espacial CSP}
 \subsubsection{EOG, EMG y HRV}
