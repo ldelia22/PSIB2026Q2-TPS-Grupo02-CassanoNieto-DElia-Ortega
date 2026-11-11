@@ -10,7 +10,6 @@ from ..comun.contratos import RegistroPreprocesado
 from .eventos import resumir_por_epoca
 from .woody import alinear, promediado_woody, similitud_con_plantilla
 
-# Provisorios: el anteproyecto no los fija.
 VENTANA_ONDA_S = 1.0  # Se recorta esto a cada lado del pico negativo.
 MAX_DESPLAZAMIENTO_S = 0.25
 

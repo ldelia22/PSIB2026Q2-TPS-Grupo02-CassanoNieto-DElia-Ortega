@@ -9,7 +9,7 @@ from ..comun.config import ConfigDescriptores
 from ..comun.contratos import RegistroPreprocesado
 from .eventos import resumir_por_epoca
 
-# Provisorios: el anteproyecto no los fija. Siguen a Mölle et al. (2002).
+# Siguen a Mölle et al. (2002).
 UMBRAL_DESVIOS = 1.5
 SUAVIZADO_S = 0.2
 

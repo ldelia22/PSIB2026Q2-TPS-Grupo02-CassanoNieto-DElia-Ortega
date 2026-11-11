@@ -1,6 +1,6 @@
 """Parámetros del pipeline. Los del preprocesamiento se eligieron con el análisis
-exploratorio de `notebooks/01_frente_A_senales.ipynb`. Los umbrales de clasificación y
-`componentes_csp` siguen siendo provisorios.
+exploratorio de `notebooks/01_frente_A_senales.ipynb`, y los umbrales de clasificación con
+los histogramas de `notebooks/03_frente_C_clasificacion.ipynb`.
 
 Las hipótesis se prueban comparando configuraciones (con y sin cada etapa), por
 eso todo lo que se prende, se apaga o se compara tiene que estar acá.
@@ -27,7 +27,7 @@ class ConfigPreprocesamiento:
     tipo_filtro: Literal["iir", "fir"] = "iir"
 
     remover_ocular: bool = True
-    metodo_ocular: Literal["nlms", "wiener"] = "wiener"  # NLMS agregó potencia delta en W y REM.
+    metodo_ocular: Literal["nlms", "wiener"] = "wiener"  # NLMS agregó potencia delta en W y N1.
     nlms_orden: int = 5
     nlms_mu: float = 0.001
     wiener_orden: int = 5

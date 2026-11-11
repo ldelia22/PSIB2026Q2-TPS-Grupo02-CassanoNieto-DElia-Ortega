@@ -10,7 +10,6 @@ from ..comun.constantes import BANDAS_EEG, CANALES_EEG
 from ..comun.contratos import RegistroPreprocesado
 from ..preprocesamiento.segmentacion import segmentar
 
-# Provisorios: el anteproyecto no los fija.
 WELCH_VENTANA_S = 4.0  # Hann de 4 s: lóbulo principal de 1 Hz, como el multitaper.
 BANDA_TOTAL_HZ = (0.5, 30.0)
 BANDA_PENDIENTE_HZ = (1.0, 40.0)
@@ -71,7 +70,7 @@ def descriptores_espectrales(
     """Potencia absoluta y relativa, cocientes entre bandas y pendiente.
 
     Se calculan para cada canal de EEG. La potencia absoluta y los cocientes van en
-    escala logarítmica, porque LDA supone descriptores con distribución normal.
+    escala logarítmica, porque varían en órdenes de magnitud.
 
     Returns:
         Matriz (n_epocas, n_descriptores) y nombres con prefijo "espectro.".

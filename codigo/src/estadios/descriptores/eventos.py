@@ -12,7 +12,7 @@ def resumir_por_epoca(
 ) -> tuple[np.ndarray, np.ndarray]:
     """Cuenta los eventos de cada época y promedia un valor de ellos.
 
-    Una época sin eventos vale 0, porque LDA no admite NaN. Los eventos posteriores a
+    Una época sin eventos vale 0, para que la tabla no tenga NaN. Los eventos posteriores a
     la última época completa se ignoran.
 
     Returns:

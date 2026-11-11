@@ -143,7 +143,7 @@ def preprocesado_sintetico(
 def tabla_sintetica(n_epocas: int = 600, semilla: int = 0) -> TablaDescriptores:
     """Descriptores gaussianos que dependen del estadio: entrada del Frente C."""
     rng = np.random.default_rng(semilla)
-    # Bloques de duración variable: da una matriz de transiciones con sentido para el HMM.
+    # Bloques de duración variable: se parece a un hipnograma real, con estadios que duran varias épocas.
     estadios: list[int] = []
     while len(estadios) < n_epocas:
         estadio = _SECUENCIA[rng.integers(len(_SECUENCIA))]

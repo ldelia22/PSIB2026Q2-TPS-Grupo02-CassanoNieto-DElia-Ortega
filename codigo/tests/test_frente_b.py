@@ -158,7 +158,7 @@ def test_cada_grupo_respeta_el_contrato(funcion, prefijo):
     matriz, nombres = funcion(prep, ConfigDescriptores())
     assert matriz.shape == (prep.registro.n_epocas, len(nombres))
     assert all(n.startswith(prefijo) for n in nombres)
-    assert np.isfinite(matriz).all()  # LDA no admite NaN: una época sin eventos vale 0.
+    assert np.isfinite(matriz).all()  # Una época sin eventos vale 0, no NaN.
 
 
 def _prep_con_senal(canal, senal, n_epocas):

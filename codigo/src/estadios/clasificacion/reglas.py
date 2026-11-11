@@ -18,7 +18,8 @@ Las reglas se evalúan en orden y gana la primera que se cumple:
          descarte), salvo que siga a una época N2: por la regla de continuidad de la
          AASM, sigue siendo N2.
 
-Después, CSP desempata entre N1 y REM cuando su evidencia es fuerte (H3): la época\ncambia de estadio si la potencia de la señal CSP queda claramente del lado del otro.
+Si "csp" está en los grupos, CSP desempata entre N1 y REM cuando su evidencia es fuerte
+(H3). Está apagado por defecto porque con datos reales empeoraba la clasificación.
 
 Cada descriptor se usa en las unidades con que se interpreta (ver `ConfigClasificacion`).
 Una primera versión expresaba todos como percentiles de la noche, pero con datos reales

@@ -69,7 +69,7 @@ ALTURA = {W: 4, R: 3, N1: 2, N2: 1, N3: 0}
 ETIQUETAS_ALTURA = ["N3", "N2", "N1", "R", "W"]
 NOMBRE_ETAPA = {"crudo": "Crudo", "filtrado": "Filtrado", "sin_ocular": "Sin artefacto ocular",
                 "sin_cardiaco": "Sin artefacto cardíaco"}
-NOMBRE_PERCENTIL = {"emg": "EMG", "eog": "Energía del EOG", "alfa": "Alfa en O2", "delta": "Delta en F4",
+NOMBRE_DESCRIPTOR = {"emg": "EMG", "eog": "Energía del EOG", "alfa": "Alfa en O2", "delta": "Delta en F4",
                     "ondas": "Ondas lentas en F4", "husos": "Husos en C4", "lf_hf": "LF/HF"}
 VISTAS_PREP = ("Cadena completa", "Filtrado", "Artefacto ocular", "Artefacto cardíaco", "Segmentación")
 VISTAS_HRV = ("Latidos de la época", "Descarte por forma", "Intervalos RR y HRV", "Periodograma de Lomb")
@@ -90,7 +90,7 @@ EXPLICACION_HRV = {
     "Descarte por forma": "El latido típico es la mediana, muestra a muestra, de todos los latidos de la noche. Se "
                           "conservan los que tienen una correlación de 0,8 o más con él.",
     "Intervalos RR y HRV": "Se descartan los intervalos fuera de 0,3 a 2 s y los que se alejan más de un 20 % de sus "
-                           "vecinos. LF/HF se mide en 5 min alrededor de cada época, como percentil de la noche.",
+                           "vecinos. LF/HF se mide en 5 min alrededor de cada época, en veces la mediana de la noche, como en la regla de REM.",
     "Periodograma de Lomb": "Lomb estima el espectro de los intervalos sin interpolarlos, aunque falten latidos. La "
                             "ventana es de 5 min centrada en la época elegida.",
 }
@@ -165,7 +165,7 @@ def promedio_cardiaco(antes: np.ndarray, despues: np.ndarray, latidos: np.ndarra
 
 
 def analizar_hrv(final, latidos: np.ndarray, marcas: np.ndarray) -> dict:
-    """Comparación con el latido típico, intervalos RR válidos y percentiles de HF y LF/HF de la noche."""
+    """Comparación con el latido típico, intervalos RR válidos y LF/HF en veces la mediana de la noche."""
     fs = final.fs
     ecg = final.senales[ECG]
     tipico, ventanas, correlacion, _ = hrv.comparar_con_latido_tipico(ecg, latidos, fs)
@@ -175,7 +175,7 @@ def analizar_hrv(final, latidos: np.ndarray, marcas: np.ndarray) -> dict:
     matriz, _ = hrv.descriptores_hrv(RegistroPreprocesado(final, latidos, marcas), ConfigDescriptores())
     return {"conservados": conservados, "tipico": tipico, "ventanas": ventanas, "correlacion": correlacion,
             "t_todos": t_todos, "rr_todos": rr_todos, "t_rr": t_rr, "rr": rr,
-            "percentiles": reglas.percentil_por_registro(matriz)}
+            "lf_hf": reglas.veces_la_mediana(matriz[:, 1])}
 
 
 def tablas_de_clasificacion(fuente: str):
@@ -197,7 +197,7 @@ def clasificar(tabla, entrenamiento, cfg_clasificacion) -> dict:
     estimado = modelo.suavizar(sin_suavizar)
     return {"sin_suavizar": sin_suavizar, "estimado": estimado, "regla": regla,
             "reporte": metricas.reporte(tabla.estadios, estimado),
-            "percentiles": reglas.descriptores_de_reglas(tabla.matriz, tabla.nombres, cfg_clasificacion)}
+            "valores": reglas.descriptores_de_reglas(tabla.matriz, tabla.nombres, cfg_clasificacion)}
 
 
 # ------------------------------------------------------------ Gráficos
@@ -1147,10 +1147,11 @@ class Aplicacion(tk.Tk):
         axs[1].plot(h["t_todos"] / 3600, h["rr_todos"], ".", c=p["tenue"], ms=1.5, label="Descartados")
         axs[1].plot(h["t_rr"] / 3600, h["rr"], ".", c=p["series"][0], ms=1.5, label="Válidos")
         axs[1].set(ylabel="RR (s)", ylim=(0.2, 2.1))
-        horas = (np.arange(len(h["percentiles"])) + 0.5) * EPOCA_H
-        axs[2].plot(horas, h["percentiles"][:, 1], c=p["series"][0], lw=0.7)
-        axs[2].axhline(50, c=p["texto2"], lw=0.6, ls=":")
-        axs[2].set(ylabel="LF/HF (percentil)", ylim=(0, 100), xlabel="Tiempo (h)")
+        horas = (np.arange(len(h["lf_hf"])) + 0.5) * EPOCA_H
+        axs[2].semilogy(horas, h["lf_hf"], c=p["series"][0], lw=0.7)
+        axs[2].axhline(1, c=p["texto2"], lw=0.6, ls=":")
+        axs[2].axhline(CFG.clasificacion.r_lf_hf_min, c=p["series"][1], lw=0.8, ls="--")
+        axs[2].set(ylabel="LF/HF (veces la mediana)", xlabel="Tiempo (h)")
         for ax in axs[1:]:
             estilar(ax)
             ax.axvline((self.epoca + 0.5) * EPOCA_H, c=p["error"], lw=1.2)
@@ -1201,8 +1202,8 @@ class Aplicacion(tk.Tk):
         fila("κ de la red de referencia", "0,79")
         fila("Regla que decidió la época", reglas.REGLAS[c["regla"][e]])
         fila("Reglas sin suavizar", nombre_estadio(int(c["sin_suavizar"][e])))
-        for nombre, valores in c["percentiles"].items():
-            fila(f"{NOMBRE_PERCENTIL.get(nombre, nombre)} (valor de la regla)", numero(float(valores[e]), 2))
+        for nombre, valores in c["valores"].items():
+            fila(f"{NOMBRE_DESCRIPTOR.get(nombre, nombre)} (valor de la regla)", numero(float(valores[e]), 2))
         for estadio, f1 in c["reporte"]["f1"].items():
             fila(f"F1 de {estadio}", numero(f1, 3))
 

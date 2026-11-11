@@ -1,8 +1,8 @@
 """Decisión 3: clasificar y evaluar solo entre luces apagadas y encendidas.
 
 Las anotaciones incluyen vigilia antes de apagar y después de prender las luces. Esas
-épocas son fáciles de clasificar e inflarían κ, y además corren los percentiles de la
-noche hacia la vigilia. Por eso, por defecto, la tabla de cada paciente se recorta a
+épocas son fáciles de clasificar e inflarían κ, y además corren hacia la vigilia la
+mediana de la noche con que se normalizan EMG, EOG y LF/HF. Por eso, por defecto, la tabla de cada paciente se recorta a
 ese período antes de elegir umbrales, clasificar y evaluar.
 """
 
