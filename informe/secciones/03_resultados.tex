@@ -1,70 +1,30 @@
 \section{Resultados}
-% Figuras y tablas generadas por codigo/notebooks/03_frente_C_clasificacion.ipynb
-% y 04_frente_C_hipotesis.ipynb. Se guardan solas en figuras/.
 
 \subsection{Preprocesamiento y descriptores}
-\textbf{Línea eléctrica y filtrado.} El pico en \SI{50}{\hertz} superó los \SI{3}{\decibel} en 212 de los 224 pares paciente y canal (mediana \SI{17,5}{\decibel}). En 10 de los 12 restantes la línea apareció al medir con una resolución de \SI{0,05}{\hertz}, y solo los dos canales de un paciente no la tuvieron. En \SI{60}{\hertz} la mediana fue de \SI{0,1}{\decibel} (Fig.~\ref{fig:linea}), por lo que el notch se fijó en \SI{50}{\hertz}. Con un pasa-altos de \SI{0,5}{\hertz}, una onda de \SI{-80}{\micro\volt} se reducía a \SI{-57}{\micro\volt} y quedaba debajo del umbral de detección, mientras que con \SI{0,2}{\hertz} conservó \SI{-72}{\micro\volt}. Los registros que el equipo filtró con un pasa-bajos de \SI{35}{\hertz} y los que filtró con uno de \SI{128}{\hertz} difirieron en \SI{0,3}{\decibel} a \SI{30}{\hertz}, donde terminan las bandas de los descriptores, por lo que se trataron todos igual.
+\textbf{Filtrado.} El pico en \SI{50}{\hertz} superó los \SI{3}{\decibel} en 212 de los 224 pares paciente y canal (mediana \SI{17,5}{\decibel}). En 10 de los 12 restantes la línea apareció al medir con \SI{0,05}{\hertz} de resolución, y solo los dos canales de un paciente no la tuvieron. En \SI{60}{\hertz} la mediana fue de \SI{0,1}{\decibel}, por lo que el notch se fijó en \SI{50}{\hertz}. Con un pasa-altos de \SI{0,5}{\hertz}, una onda de \SI{-80}{\micro\volt} se reducía a \SI{-57}{\micro\volt} y quedaba debajo del umbral de detección, mientras que con \SI{0,2}{\hertz} conservó \SI{-72}{\micro\volt}. Los registros con pasa-bajos del equipo de 35 y de \SI{128}{\hertz} difirieron en \SI{0,3}{\decibel} a \SI{30}{\hertz}, y se trataron igual. En el paciente mediano el 2,6\,\% de las épocas tuvo alguna muestra saturada, y en el peor, SN020, el 37\,\%.
 
-\textbf{Saturación.} En el paciente mediano solo el 0,05\,\% de las muestras de EEG llegó al borde del rango, pero eso alcanzó para afectar al 2,6\,\% de las épocas, tomando el canal más afectado de cada paciente. El peor caso fue SN020, con el 37\,\% de las épocas. No se descartaron épocas, porque hay que clasificarlas todas, pero los tramos de más de \SI{500}{\micro\volt} quedaron fuera del ajuste del filtro ocular y de la plantilla cardíaca.
-
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.9\textwidth]{a_linea_electrica}
-  \caption{Espectro crudo de un paciente (izquierda) y prominencia de 50 y \SI{60}{\hertz} en los pacientes de entrenamiento (derecha).}
-  \label{fig:linea}
-\end{figure}
-
-\textbf{Artefacto ocular.} Corregir toda la noche redujo un 6,5\,\% (Wiener) y un 14\,\% (NLMS) las ondas lentas detectadas en N3. Wiener con compuerta conservó N3 (de 5018 a 4994 ondas, en 12 pacientes) y redujo un 19\,\% las detecciones en REM, que eran movimientos oculares (Fig.~\ref{fig:ondas}). NLMS con compuerta aumentó la potencia delta en W y N1, por lo que se adoptó Wiener.
+\textbf{Artefactos.} Corregir toda la noche redujo las ondas lentas detectadas en N3 un 6,5\,\% con Wiener y un 14\,\% con NLMS. Wiener con compuerta conservó N3 (de 5018 a 4994 ondas en 12 pacientes) y redujo un 19\,\% las detecciones en REM, que eran movimientos oculares, mientras que NLMS con compuerta aumentó la potencia delta en W y N1, así que se adoptó Wiener. El promedio sincronizado con los latidos mostró el QRS y la onda T en los 12 pacientes (Fig.~\ref{fig:cardiaco}). En F4 su amplitud mediana fue de \SI{17}{\micro\volt} pico a pico, unas 40 veces la del control al azar (\SI{0,4}{\micro\volt}), y la remoción la redujo a \SI{1,6}{\micro\volt} (91\,\%). Como el artefacto tiene la misma amplitud toda la noche, quitó más potencia en REM que en W, \SI{0,55}{\decibel} contra \SI{0,06}{\decibel} en $\alpha$ de O2.
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.6\textwidth]{a_ondas_por_estadio}
-  \caption{Ondas lentas detectadas en F4 por estadio, antes y después de la corrección ocular.}
-  \label{fig:ondas}
-\end{figure}
-
-\textbf{Artefacto cardíaco.} El promedio sincronizado mostró el QRS y la onda T en los 12 pacientes analizados (Fig.~\ref{fig:cardiaco}). En F4 su amplitud mediana fue de \SI{17}{\micro\volt} pico a pico, unas 40 veces la del control con instantes al azar (\SI{0,4}{\micro\volt}), lo que responde a la duda planteada en la devolución. C3, referido a M2, tuvo la mitad de artefacto que los canales referidos a M1. La remoción lo redujo a \SI{1,6}{\micro\volt} (91\,\%) sin cambiar la potencia delta, y quitó más potencia en REM que en W, con \SI{0,55}{\decibel} contra \SI{0,06}{\decibel} en alfa de O2 y \SI{0,62}{\decibel} contra \SI{0,16}{\decibel} en sigma de C4.
-
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=\textwidth]{a_promedio_latidos}
-  \caption{Promedio de F4 alrededor de cada latido antes y después de la remoción, y en instantes al azar como control.}
+  \includegraphics[width=0.9\textwidth]{a_promedio_latidos}
+  \caption{Promedio de F4 alrededor de cada latido antes y después de la remoción, y en instantes al azar como control, en cuatro pacientes.}
   \label{fig:cardiaco}
 \end{figure}
 
-\textbf{Segmentación.} La marca de no estacionariedad abarcó el 10\,\% de las épocas de entrenamiento, con 25\,\% en W y 3\,\% en N3, y fue más frecuente en las épocas de transición entre estadios (17,5\,\% contra 7,5\,\%). En las épocas marcadas el clasificador acertó el 28\,\% contra el 45\,\% de las no marcadas. Un tercio de las épocas marcadas de W, N1, N2 y REM se clasificó como N3, porque la regla de N3 tomó las deflexiones grandes como ondas lentas.
+\textbf{Segmentación.} La marca de no estacionariedad abarcó el 10\,\% de las épocas de entrenamiento, con 25\,\% en W y 3\,\% en N3, y fue más frecuente en las épocas de transición entre estadios (17,5\,\% contra 7,5\,\%). El clasificador acertó el 49\,\% de las épocas marcadas y el 52\,\% de las no marcadas, y las marcadas de W, N1, N2 y REM se clasificaron como N3 algo más seguido (4 a 18\,\% contra 2 a 16\,\%).
 
-\textbf{Latidos y HRV.} En los 12 pacientes analizados, Pan-Tompkins detectó entre 24\,700 y 37\,900 latidos por noche, con RR medianos entre 0,69 y \SI{1,06}{\second}. El descarte por forma sacó una mediana del 4,9\,\% de los latidos, y después de filtrar los intervalos se conservó al menos el 90\,\% en 10 de los 12 pacientes. La excepción fue SN001, con el 47\,\%, porque tiene un ritmo muy irregular. El 24\,\% de sus intervalos es más de un 20\,\% más corto que el de sus vecinos, contra una mediana del 1,8\,\% en los demás. El cociente LF/HF fue menor en N3 y mayor en REM, como se esperaba, con percentiles medianos de 25 y 70 dentro de la noche. HF bajó en REM pero no subió en N3, por lo que la regla de REM usa el cociente.
+\textbf{Latidos y HRV.} En 12 pacientes Pan-Tompkins detectó entre 24\,700 y 37\,900 latidos por noche, con RR medianos entre 0,69 y \SI{1,06}{\second}. El descarte por forma sacó una mediana del 4,9\,\% de los latidos, y después de filtrar los intervalos se conservó al menos el 90\,\% en 10 de los 12 pacientes. Las excepciones fueron SN005, con el 80\,\%, y SN001, con el 47\,\%, porque el 24\,\% de sus intervalos es más de un 20\,\% más corto que el de sus vecinos (mediana de 1,8\,\% en los demás). LF/HF fue menor en N3 y mayor en REM, y HF bajó en REM pero no subió en N3, por lo que la regla de REM usa el cociente.
 
-\textbf{Descriptores por estadio.} Para ver si cada descriptor separa los estadios en todos los pacientes y no solo en uno, se estandarizó cada descriptor dentro de cada noche y se promedió por estadio en cada uno de los 56 pacientes de entrenamiento, entre luces apagadas y encendidas (Fig.~\ref{fig:huella}). El descriptor más consistente fue la pendiente del espectro, que en C4 pasó de una mediana de $-1{,}36$ en W a $-2{,}66$ en N3 y fue más empinada en N3 que en W en los 56 pacientes. La potencia $\delta$ relativa en F4 fue máxima en N3 en 49 pacientes y la amplitud del EMG fue mínima en REM en 43. La $\alpha$ relativa en O2 fue máxima en W solo en 31, y la energía del EOG resultó más alta en W que en REM ($+0{,}92$ contra $+0{,}46$ desvíos), de modo que ninguno de los dos alcanza por sí solo para reconocer esos estadios.
-
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=\textwidth]{b_huella_pacientes}
-  \caption{Descriptores estandarizados dentro de cada noche, un valor por paciente y por estadio (56 pacientes de entrenamiento). La línea horizontal marca el valor medio de la noche.}
-  \label{fig:huella}
-\end{figure}
-
-\textbf{Husos y ondas lentas en vigilia.} Los dos detectores encontraron eventos en W. La mediana entre pacientes fue de 1,10 husos por época en W y de 0,99 en N2, y W superó a N2 en 34 de los 56 pacientes. Las ondas lentas fueron 2,42 por época en N3 y 1,79 en W, y N3 superó a todos los demás estadios solo en 33 pacientes. Dentro de W, las épocas con dos o más husos tuvieron un EMG más alto que las que no tenían ninguno en los 56 pacientes (mediana de 17 contra \SI{7}{\micro\volt}) y menos $\alpha$ en O2 en 55 (0,04 contra 0,15). Con las ondas lentas el resultado fue el mismo. En el paciente de ejemplo, además, las detecciones de W tuvieron la misma frecuencia que las de N2, cerca de \SI{13}{\hertz}, y la corrección ocular redujo un 75\,\% las ondas lentas de REM pero solo un 7\,\% las de W. Las detecciones de vigilia corresponden entonces a vigilia activa, con movimiento y tensión muscular, y no al ritmo $\alpha$ ni a movimientos oculares.
-
-\textbf{Woody sobre ondas reales.} En los 55 pacientes de entrenamiento con al menos cinco ondas lentas en N3, la plantilla de Woody tuvo un valle menos profundo que el promedio ordinario (mediana de $-78{,}9$ contra \SI{-83,1}{\micro\volt}), porque cada onda se recorta centrada en su mínimo y el promedio ordinario suma ahí el ruido de todas. El algoritmo convergió antes de las 20 iteraciones en 25 pacientes. En los demás siguió moviendo unas pocas ondas muy deformadas, que saltan entre posiciones sin estabilizarse, y en el paciente mediano el 0,4\,\% de las ondas quedó en el corrimiento máximo de \SI{0,25}{\second}. Entre las épocas con ondas, la similitud con la plantilla fue parecida en todos los estadios (mediana entre 0,74 y 0,79).
+\textbf{Descriptores.} Estandarizados dentro de cada noche en los 56 pacientes de entrenamiento (Fig.~\ref{fig:huella} del anexo), el descriptor más consistente fue la pendiente del espectro en C4, más empinada en N3 que en W en todos los pacientes. La $\delta$ relativa en C4 fue máxima en N3 en 49 pacientes y el EMG mínimo en REM en 43, pero la $\alpha$ en O2 fue máxima en W solo en 31 y la energía del EOG fue más alta en W que en REM. Los detectores de husos y ondas lentas encontraron eventos en W, que superó a N2 en husos en 34 pacientes. En W, las épocas con dos o más husos tuvieron el EMG más alto en los 56 pacientes y menos $\alpha$ en 55, por lo que corresponden a vigilia activa, con movimiento y tensión muscular. Sobre ondas reales, la plantilla de Woody tuvo un valle menos profundo que el promedio ordinario ($-78{,}9$ contra \SI{-83,1}{\micro\volt}), convergió antes de 20 iteraciones en 25 de 55 pacientes y su similitud con las ondas fue parecida en todos los estadios (0,74 a 0,79).
 
 \subsection{Clasificación}
-De los 70 registros, 56 se usaron para elegir los umbrales y 14 para la evaluación, con 13\,127 épocas de prueba entre luces apagadas y encendidas. En esta base las grabaciones casi no tienen épocas fuera de ese período (28 en los pacientes de prueba), así que evaluar toda la noche dio el mismo acuerdo ($\kappa = 0{,}343$).
+Los umbrales que mejor separaron fueron los del EMG, con 1,98 veces la mediana en W frente a 0,94 en el resto, y de la energía del EOG, con 2,51 en REM frente a 0,67 en N1 y N2. La $\delta$ relativa separó N3 de N2 con superposición (0,88 y 0,77), y la $\alpha$ y LF/HF separaron poco. Más de la mitad de las épocas N2 no tuvo ningún huso, lo que justifica la regla de continuidad. Para el mínimo de ondas lentas, 2 y 3 dieron casi el mismo $\kappa$ de entrenamiento (0,406 y 0,404) y se eligió 2, que también indica el cruce de los histogramas.
 
-\textbf{Umbrales.} La Fig.~\ref{fig:umbrales} muestra, para cada regla, cómo se distribuye el descriptor en el estadio que detecta y en los estadios de los que lo separa. Los que mejor separaron fueron el EMG, con una mediana de 1,98 veces la de la noche en W frente a 0,94 en el resto y de 0,76 en REM frente a 1,33 en N1, y la energía del EOG, con 2,51 en REM frente a 0,67 en N1 y N2. La $\delta$ relativa en F4 separó N3 de N2 con superposición (medianas de 0,88 y 0,77). La $\alpha$ relativa en O2 (0,12 en W frente a 0,075) y el cociente LF/HF (1,29 en REM frente a 1,02) separaron poco, por lo que en ambos casos se mantuvo un umbral más exigente que el cruce. Más de la mitad de las épocas N2 no tuvo ningún huso detectado, lo que justifica la regla de continuidad. Para el umbral de ondas lentas, los valores 2 y 3 dieron un acuerdo casi igual sobre los pacientes de entrenamiento ($\kappa = 0{,}406$ y $0{,}404$), y se eligió 2, que es además el que indica el cruce de los histogramas.
-
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=\textwidth]{c_eleccion_umbrales}
-  \caption{Histogramas de cada descriptor en los estadios que separa cada regla (pacientes de entrenamiento). Punteada: cruce de los histogramas; roja: umbral elegido. EMG, EOG y LF/HF en escala logarítmica.}
-  \label{fig:umbrales}
-\end{figure}
-
-\textbf{Acuerdo con los técnicos.} El clasificador final, con reglas y suavizado por continuidad, alcanzó $\kappa = 0{,}343$ sobre los pacientes de prueba (Tabla~\ref{tab:resultados}), frente a $0{,}406$ sobre los de entrenamiento. Como las reglas no se ajustan con los datos, esa diferencia refleja la variabilidad entre pacientes y no un sobreajuste: el $\kappa$ por paciente tuvo una mediana de 0,28 (cuartiles 0,22 y 0,43) y fue de 0,16 a 0,55 (Fig.~\ref{fig:kappa_pacientes}). REM y W fueron los estadios mejor reconocidos (F1 de 0,61 y 0,58), y N1 el peor (0,18).
+Sobre las 13\,127 épocas de prueba el clasificador final alcanzó $\kappa = 0{,}343$ (Tabla~\ref{tab:resultados}), frente a 0,406 en entrenamiento. Como solo 28 épocas de prueba quedaban fuera del período de sueño, evaluar toda la noche dio el mismo valor. El $\kappa$ por paciente tuvo una mediana de 0,28 y fue de 0,16 a 0,55. Los errores principales (Fig.~\ref{fig:confusion}) fueron épocas N2 asignadas a N3 (1067) y a N1 (909), N1 asignadas a W (616) y REM asignadas a N1 (415). La regla de REM acertó el 61\,\%, la de N2 el 59\,\%, la continuidad de N2 el 60\,\%, la de W el 53\,\% y la de N3 el 44\,\%, mientras que N1, asignado por descarte a 2455 épocas, acertó el 16\,\%. Las reglas de continuidad cambiaron 1343 épocas, corrigieron 465 errores e introdujeron 327, mientras que el filtro de moda cambió 2387, con 780 correcciones y 674 errores nuevos.
 
 \begin{table}[htbp]
-  \centering
+  \centering\small
   \caption{Acuerdo con los técnicos sobre los 14 pacientes de prueba.}
   \label{tab:resultados}
   \begin{tabular}{lcccccc}
@@ -83,72 +43,39 @@ De los 70 registros, 56 se usaron para elegir los umbrales y 14 para la evaluaci
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.5\textwidth]{c_kappa_por_paciente}
-  \caption{$\kappa$ de cada paciente de prueba, sin suavizado y con suavizado por continuidad.}
-  \label{fig:kappa_pacientes}
-\end{figure}
-
-\textbf{Errores.} La matriz de confusión (Fig.~\ref{fig:confusion}) muestra cuatro errores principales: épocas N2 asignadas a N3 (1067) y a N1 (909), épocas N1 asignadas a W (616) y épocas REM asignadas a N1 (415). La sensibilidad fue del 61\,\% en W, 21\,\% en N1, 43\,\% en N2, 62\,\% en N3 y 56\,\% en REM.
-
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=\textwidth]{c_matrices_confusion}
-  \caption{Matrices de confusión sobre los pacientes de prueba, normalizadas por fila (estadio de los técnicos), sin suavizado y con suavizado por continuidad.}
+  \includegraphics[width=0.78\textwidth]{c_matrices_confusion}
+  \caption{Matrices de confusión sobre los pacientes de prueba, normalizadas por fila, sin suavizado y con suavizado por continuidad.}
   \label{fig:confusion}
 \end{figure}
 
-\textbf{Qué regla decidió cada época.} La Fig.~\ref{fig:uso_reglas} muestra cuántas épocas de prueba asignó cada regla y qué fracción coincidió con los técnicos. La regla de REM acertó el 61\,\%, la de N2 el 59\,\%, la continuidad de N2 el 60\,\%, la de W el 53\,\% y la de N3 el 44\,\%. N1, asignado por descarte a 2455 épocas, acertó solo el 16\,\%.
-
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.6\textwidth]{c_uso_reglas}
-  \caption{Cantidad de épocas de prueba que decidió cada regla y fracción de aciertos.}
-  \label{fig:uso_reglas}
-\end{figure}
-
-\textbf{Suavizado.} Las reglas de continuidad cambiaron 1343 épocas: corrigieron 465 errores e introdujeron 327. El filtro de moda cambió 2387, con 780 correcciones y 674 errores nuevos. El suavizado por reglas tuvo el mejor balance, aunque su aporte a $\kappa$ fue chico (de 0,330 a 0,343). La Fig.~\ref{fig:hipnograma} muestra su efecto sobre un paciente de prueba.
-
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=\textwidth]{c_hipnograma_SN006}
-  \caption{Hipnograma de un paciente de prueba: técnicos, reglas y reglas con suavizado por continuidad.}
-  \label{fig:hipnograma}
-\end{figure}
-
 \subsection{Verificación de hipótesis}
+La Tabla~\ref{tab:hipotesis} resume las comparaciones y la Fig.~\ref{fig:hipotesis} muestra cada paciente. El multitaper varió menos que Welch en los 14 pacientes, Woody tuvo menos error de forma en 11, el desempate CSP empeoró el F1 de REM en 10 y la remoción de artefactos con la HRV no cambió el $\kappa$.
 
 \begin{table}[htbp]
-  \centering
-  \caption{Comparaciones paciente por paciente sobre los 14 pacientes de prueba: mediana de cada variante y $p$ de la prueba de Wilcoxon. Con 14 pacientes, el menor $p$ posible es 0,0001, cuando todos van en el mismo sentido.}
+  \centering\small
+  \caption{Mediana de cada variante sobre los 14 pacientes de prueba y $p$ de Wilcoxon. Con 14 pacientes el menor $p$ posible es 0,0001, cuando todos van en el mismo sentido.}
   \label{tab:hipotesis}
   \begin{tabular}{llccc}
     \toprule
     & Medida & Variante A & Variante B & $p$ \\
     \midrule
-    H1 & Variación por banda     & Multitaper: 0,142 & Welch: 0,148      & 0,0001 \\
-       & Variación por frecuencia & Multitaper: 0,182 & Welch: 0,220     & 0,0001 \\
-    H2 & Error de forma          & Woody: 0,28      & Promedio: 0,42   & 0,049 \\
-    H3 & F1 de N1                & Con desempate: 0,16 & Sin desempate: 0,14 & 0,060 \\
-       & F1 de REM               & Con desempate: 0,46 & Sin desempate: 0,57 & 0,009 \\
-    H4 & Residuo cardíaco (\si{\micro\volt}) & Después: 1,2 & Antes: 19,5 & 0,0001 \\
-       & $\kappa$                & Con etapas: 0,28 & Sin etapas: 0,29 & 0,54 \\
+    H1 & Variación por banda      & Multitaper 0,142 & Welch 0,148 & 0,0001 \\
+       & Variación por frecuencia & Multitaper 0,182 & Welch 0,220 & 0,0001 \\
+    H2 & Error de forma           & Woody 0,28 & Promedio 0,42 & 0,049 \\
+    H3 & F1 de N1                 & Con desempate 0,16 & Sin desempate 0,14 & 0,060 \\
+       & F1 de REM                & Con desempate 0,46 & Sin desempate 0,57 & 0,009 \\
+    H4 & Residuo cardíaco (\si{\micro\volt}) & Después 1,2 & Antes 19,5 & 0,0001 \\
+       & $\kappa$                 & Con etapas 0,28 & Sin etapas 0,29 & 0,54 \\
     \bottomrule
   \end{tabular}
 \end{table}
 
 \begin{figure}[htbp]
   \centering
-  \begin{subfigure}{0.32\textwidth}\includegraphics[width=\linewidth]{h_h1_frecuencias}\caption{H1, por frecuencia.}\end{subfigure}
-  \hfill
-  \begin{subfigure}{0.32\textwidth}\includegraphics[width=\linewidth]{h_h2}\caption{H2.}\end{subfigure}
-  \hfill
-  \begin{subfigure}{0.32\textwidth}\includegraphics[width=\linewidth]{h_h3_r}\caption{H3, F1 de REM.}\end{subfigure}
-
-  \begin{subfigure}{0.32\textwidth}\includegraphics[width=\linewidth]{h_h4_residuo}\caption{H4, residuo cardíaco.}\end{subfigure}
-  \hfill
-  \begin{subfigure}{0.32\textwidth}\includegraphics[width=\linewidth]{h_h4_kappa}\caption{H4, $\kappa$.}\end{subfigure}
-  \hfill
-  \begin{subfigure}{0.32\textwidth}\includegraphics[width=\linewidth]{h_h3_n1}\caption{H3, F1 de N1.}\end{subfigure}
-  \caption{Verificación de hipótesis. Cada línea gris une los dos valores de un paciente de prueba.}
+  \begin{subfigure}{0.245\textwidth}\includegraphics[width=\linewidth]{h_h1_frecuencias}\end{subfigure}\hfill
+  \begin{subfigure}{0.245\textwidth}\includegraphics[width=\linewidth]{h_h2}\end{subfigure}\hfill
+  \begin{subfigure}{0.245\textwidth}\includegraphics[width=\linewidth]{h_h3_r}\end{subfigure}\hfill
+  \begin{subfigure}{0.245\textwidth}\includegraphics[width=\linewidth]{h_h4_kappa}\end{subfigure}
+  \caption{Verificación de H1 (por frecuencia), H2, H3 (F1 de REM) y H4 ($\kappa$). Cada línea gris une los dos valores de un paciente de prueba.}
   \label{fig:hipotesis}
 \end{figure}

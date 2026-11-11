@@ -4,33 +4,31 @@
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage{lmodern}
-\usepackage[margin=2.5cm]{geometry}
+\usepackage[margin=2cm]{geometry}
 \usepackage{amsmath,amssymb}
 \usepackage{graphicx}
 \usepackage{booktabs}
+\usepackage{tabularx}
 \usepackage{siunitx}
 \usepackage{subcaption}
 \usepackage{xcolor}
+\usepackage{csquotes}
 \usepackage[hidelinks]{hyperref}
 \usepackage[style=ieee,backend=biber]{biblatex}
 
 \sisetup{output-decimal-marker={,}}
 \graphicspath{{figuras/}}
 \addbibresource{bibliografia.bib}
-
-% Marca lo que falta completar. Para la entrega: \renewcommand{\pendiente}[1]{}
-\newcommand{\pendiente}[1]{\textcolor{red}{[#1]}}
+\setlength{\abovecaptionskip}{4pt}
+\setlength{\textfloatsep}{10pt}
 
 \begin{document}
 
 \input{secciones/00_portada}
 
 \begin{abstract}
-La clasificación de los estadios de sueño en la polisomnografía se hace a mano, época por época, y el acuerdo entre técnicos ronda $\kappa = 0{,}74$. Se desarrolló un clasificador automático sin técnicas de inteligencia artificial, con decisiones explicables a partir de las señales. Sobre 70 registros de la base HMC se filtró el EEG, se removieron los artefactos ocular y cardíaco y se calcularon descriptores espectrales con el método multitaper, husos, ondas lentas con promediado de Woody, energía del EOG, amplitud del EMG y variabilidad de la frecuencia cardíaca. Cada época de 30~s se asignó con cinco reglas inspiradas en el manual AASM, con umbrales elegidos sobre 56 pacientes de entrenamiento, y se suavizó con reglas de continuidad. Sobre 14 pacientes de prueba se alcanzó $\kappa = 0{,}343$, con REM y vigilia como los estadios mejor reconocidos y N1 como el más difícil. El multitaper redujo la variabilidad espectral respecto de Welch y Woody recuperó mejor la forma de las ondas lentas, mientras que el filtrado espacial CSP no mejoró la separación de N1 y REM y la remoción del artefacto cardíaco, aunque eficaz, no cambió el acuerdo. Una interfaz gráfica muestra cada etapa y la regla que decidió cada época.
+La clasificación de los estadios de sueño en la polisomnografía se hace a mano, época por época, y el acuerdo entre técnicos ronda $\kappa = 0{,}74$. Se desarrolló un clasificador automático sin técnicas de inteligencia artificial, con decisiones explicables a partir de las señales. Sobre 70 registros de la base HMC se filtró el EEG, se removieron los artefactos ocular y cardíaco y se calcularon descriptores espectrales con el método multitaper, husos, ondas lentas con promediado de Woody, energía del EOG, amplitud del EMG y variabilidad de la frecuencia cardíaca. Cada época de 30~s se asignó con cinco reglas inspiradas en el manual AASM, con umbrales elegidos sobre 56 pacientes de entrenamiento, y se suavizó con reglas de continuidad. Sobre 14 pacientes de prueba se alcanzó $\kappa = 0{,}343$, lejos del objetivo, con REM y vigilia como los estadios mejor reconocidos y N1 como el más difícil. El multitaper redujo la variabilidad espectral respecto de Welch y Woody recuperó mejor la forma de las ondas lentas, mientras que el filtrado espacial CSP no mejoró la separación de N1 y REM, y quitar los artefactos y sumar la HRV no cambió el acuerdo. Una interfaz gráfica muestra cada etapa y la regla que decidió cada época.
 \end{abstract}
-
-\tableofcontents
-\newpage
 
 \input{secciones/01_introduccion}
 \input{secciones/02_metodos}
@@ -39,5 +37,7 @@ La clasificación de los estadios de sueño en la polisomnografía se hace a man
 \input{secciones/05_conclusiones}
 
 \printbibliography
+
+\input{secciones/06_anexo}
 
 \end{document}

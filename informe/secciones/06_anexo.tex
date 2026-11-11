@@ -1,0 +1,62 @@
+\clearpage
+\appendix
+\section{Anexo}
+
+\subsection{Archivos del repositorio}
+\label{sec:archivos}
+El código está en \texttt{codigo/}. El paquete \texttt{src/estadios/} tiene un módulo por etapa, y los notebooks lo importan, de modo que las figuras y la interfaz usan las mismas funciones que se evalúan.
+
+{\small\noindent
+\begin{tabularx}{\textwidth}{>{\ttfamily\raggedright\arraybackslash}p{0.47\textwidth}X}
+  \toprule
+  \normalfont Archivo & Contenido \\
+  \midrule
+  comun/config.py, constantes.py & Parámetros de cada etapa y umbrales de las reglas, canales y bandas \\
+  comun/contratos.py, sintetico.py & Estructuras que se pasan las etapas y datos sintéticos con la misma forma \\
+  datos/carga.py, particion.py & Lectura de los EDF y anotaciones, y partición por paciente \\
+  preprocesamiento/exploratorio.py & Línea eléctrica, encabezado EDF, saturación y promedio alrededor de latidos \\
+  preprocesamiento/filtrado.py & Diseño IIR y FIR del pasa-altos, pasa-bajos y notch \\
+  preprocesamiento/ocular.py & NLMS, Wiener y compuerta para el artefacto ocular \\
+  preprocesamiento/qrs.py, cardiaco.py & Pan-Tompkins y resta de la plantilla cardíaca \\
+  preprocesamiento/segmentacion.py & Épocas de 30 s y marca de no estacionariedad con modelo AR \\
+  descriptores/espectro.py & Multitaper, Welch, potencia por banda, cocientes y pendiente \\
+  descriptores/husos.py, ondas\_lentas.py, woody.py, eventos.py & Detección de husos y ondas lentas, promediado de Woody y resumen por época \\
+  descriptores/csp.py, perifericos.py, hrv.py & CSP, energía del EOG, amplitud del EMG y HRV con Lomb \\
+  descriptores/ensamblado.py, pipeline.py & Unen las etapas y guardan los descriptores en caché \\
+  clasificacion/reglas.py, suavizado.py, modelo.py & Reglas AASM, continuidad, desempate CSP y suavizado \\
+  evaluacion/metricas.py, periodo.py, hipotesis.py & $\kappa$, F1, recorte al período de sueño y verificación de H1 a H4 \\
+  notebooks/01\_frente\_A\_senales & Exploratorio, filtrado, artefactos, latidos, segmentación y HRV \\
+  notebooks/02 a 02e\_frente\_B & Espectro, husos, ondas lentas y Woody, CSP, EOG y EMG \\
+  notebooks/03\_frente\_C\_clasificacion & Elección de umbrales, reglas, suavizado y métricas \\
+  notebooks/04\_frente\_C\_hipotesis & Verificación de H1 a H4 \\
+  scripts/ & Descarga de los datos, cálculo de descriptores y evaluación \\
+  app/interfaz.py & Interfaz gráfica de escritorio \\
+  tests/ & Pruebas de cada etapa \\
+  \bottomrule
+\end{tabularx}
+}
+
+\subsection{Figuras complementarias}
+
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}{0.8\textwidth}\includegraphics[width=\linewidth]{interfaz_preprocesamiento}\caption{Preprocesamiento de un canal de EEG.}\end{subfigure}
+
+  \begin{subfigure}{0.8\textwidth}\includegraphics[width=\linewidth]{interfaz_clasificacion}\caption{Clasificación, regla y descriptores de la época.}\end{subfigure}
+  \caption{Interfaz gráfica sobre el registro de prueba SN006, cuyo $\kappa$ es 0,25.}
+  \label{fig:interfaz}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.9\textwidth]{c_eleccion_umbrales}
+  \caption{Histogramas de cada descriptor en los estadios que separa cada regla, con los pacientes de entrenamiento. Punteada, cruce de los histogramas. Roja, umbral elegido.}
+  \label{fig:umbrales}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.9\textwidth]{b_huella_pacientes}
+  \caption{Descriptores estandarizados dentro de cada noche, un valor por paciente y por estadio, en los 56 pacientes de entrenamiento.}
+  \label{fig:huella}
+\end{figure}
