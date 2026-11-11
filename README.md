@@ -2,9 +2,10 @@
 
 TP de Procesamiento de Señales e Imágenes Biomédicas (16.63), Grupo 2. Clasifica cada
 época de una polisomnografía en W, N1, N2, N3 o REM con decisiones explicables a partir
-de las señales. El detalle del método está en el
-[anteproyecto](informe/anteproyecto/anteproyecto.pdf) y su
-[devolución](informe/anteproyecto/devolucion.txt).
+de las señales. El método y los resultados finales están en el informe
+([`informe/main.tex`](informe/main.tex)). El [anteproyecto](informe/anteproyecto/anteproyecto.pdf)
+y su [devolución](informe/anteproyecto/devolucion.txt) quedan como referencia, aunque el
+clasificador cambió después de la devolución.
 
 ## Estructura del repo
 
@@ -88,8 +89,8 @@ Registro ──► Frente A ──► RegistroPreprocesado ──► Frente B �
 | Frente | Etapas | Carpetas | Responsable |
 |---|---|---|---|
 | **A. Señales** | 1 a 5: exploratorio, filtrado, artefactos ocular y cardíaco, QRS, segmentación. También la HRV de la etapa 9 | `datos/`, `preprocesamiento/`, `descriptores/hrv.py` | Cassano Nieto |
-| **B. Descriptores** | 6 a 9: multitaper, husos, ondas lentas, Woody, CSP, EOG, EMG | `descriptores/` (salvo `hrv.py`) | *a definir* |
-| **C. Clasificación y resultados** | 10, 11 y sección 3: reglas AASM, suavizado, interfaz, métricas, H1 a H4 | `clasificacion/`, `evaluacion/`, `app/` | *a definir* |
+| **B. Descriptores** | 6 a 9: multitaper, husos, ondas lentas, Woody, CSP, EOG, EMG | `descriptores/` (salvo `hrv.py`) | D'Elía |
+| **C. Clasificación y resultados** | 10, 11 y sección 3: reglas AASM, suavizado, interfaz, métricas, H1 a H4 | `clasificacion/`, `evaluacion/`, `app/` | Ortega |
 
 La HRV es del Frente A porque se calcula con los latidos que detecta `qrs.py`. El
 archivo queda en `descriptores/` porque su salida es un descriptor más de la tabla.
@@ -122,12 +123,11 @@ forma que los reales:
 | 11. Interfaz | `app/interfaz.py` | |
 | Evaluación | `evaluacion/metricas.py`, `hipotesis.py` | H1 a H4 |
 
-### Qué ya funciona
+### Estado
 
-Las tres partes están implementadas y pasan sus tests. El Frente A ya corre sobre los
-registros reales y sus decisiones están justificadas en
-`notebooks/01_frente_A_senales.ipynb`. Falta elegir los umbrales de las reglas con
-datos reales y verificar H1 a H4 sobre ellos.
+Está todo implementado y corrido sobre los 70 registros. Con los umbrales finales, el
+clasificador llega a κ = 0,343 en los 14 pacientes de prueba. Los números salen de los
+notebooks 03 y 04, y la discusión completa está en el informe.
 
 ## Puesta en marcha
 
@@ -147,12 +147,11 @@ funciona. No se usa ninguna librería de aprendizaje automático: la devolución
 permite en el TP cuatrimestral. En Windows, con PowerShell, el entorno se activa con
 `.venv\Scripts\Activate.ps1`.
 
-Los tests de lo que falta implementar figuran como `skipped`. Cada función tiene su
-test en `codigo/tests/test_frente_{a,b,c}.py`: al implementarla, el test empieza a correr solo
-y sirve de especificación. Para ver qué le falta a tu frente:
+Cada etapa tiene sus tests en `codigo/tests/test_frente_{a,b,c}.py`. Para correr solo
+los de un frente:
 
 ```bash
-pytest tests/test_frente_a.py -rs
+pytest tests/test_frente_a.py
 ```
 
 ### Datos
@@ -197,45 +196,38 @@ el paquete `python3-tk` del sistema.
   tiene su propio caché.
 - **Unidades:** señales en µV, estadios como enteros, latidos como índices de muestra.
 
-## Orden sugerido
+## Decisiones que tomamos
 
-1. Definir responsables y resolver las decisiones de abajo.
-2. Cada frente implementa lo suyo sobre datos sintéticos hasta que pasen sus tests.
-3. A y B prueban la unión con unos pocos registros reales.
-4. Se calculan los descriptores de los 70 registros, y C entrena y evalúa.
-5. Se verifican H1 a H4 y se termina la interfaz.
+Fueron saliendo a medida que comparábamos el anteproyecto con la base real.
 
-## Decisiones abiertas
-
-Surgieron al armar el esqueleto y contrastar el anteproyecto con la base.
-
-1. **Pasa-altos y ondas lentas.** Resuelta. El pasa-altos del EEG bajó a 0,2 Hz para no
-   recortar la banda en la que se detectan las ondas lentas.
-2. **Cantidad de registros.** El anteproyecto dice 148 PSG, pero la v1.1 publica 151 (no
-   existen SN014, SN064 ni SN135). No cambia el método, sí el texto del informe.
-3. **Épocas fuera del período de sueño.** Resuelta. Las anotaciones incluyen vigilia
+1. **Pasa-altos y ondas lentas.** El pasa-altos del EEG bajó a 0,2 Hz para no recortar la
+   banda en la que se detectan las ondas lentas.
+2. **Cantidad de registros.** El anteproyecto hablaba de 148 PSG, pero la v1.1 publica 151
+   (no existen SN014, SN064 ni SN135). Usamos 70 elegidos al azar con semilla fija.
+3. **Épocas fuera del período de sueño.** Las anotaciones incluyen vigilia
    antes de apagar y después de prender las luces, que es fácil de clasificar e inflaría
    κ. La clasificación y la evaluación usan solo las épocas entre luces apagadas y
    encendidas (`evaluacion/periodo.py`): los notebooks 03 y 04 recortan las tablas con
    `SOLO_PERIODO_DE_SUENO = True`, y `scripts/entrenar_y_evaluar.py` lo hace salvo que
    se pase `--toda-la-noche`. El notebook 03 compara los dos criterios. La interfaz
    muestra la grabación completa.
-4. **Épocas no estacionarias.** Resuelta. La etapa 5 las marca y quedan en la tabla, pero
-   las reglas no las usan y no se excluyen de la evaluación. El notebook 01 muestra que el
-   clasificador acierta menos en ellas y que un tercio de las marcadas de W, N1, N2 y REM
-   se clasifica como N3, algo a revisar en la regla de N3.
+4. **Épocas no estacionarias.** La etapa 5 las marca y quedan en la tabla, pero las reglas
+   no las usan y no se sacan de la evaluación. Con las reglas finales el clasificador
+   acierta casi lo mismo en ellas (49 % contra 52 %), así que la marca queda como
+   información.
 5. **Saturación.** Medida en el notebook 01. Los tramos que superan 500 µV no participan
    del ajuste del filtro ocular ni de la plantilla cardíaca. Las épocas siguen en la tabla.
-6. **Parámetros sin definir.** Los de preprocesamiento se eligieron en el notebook 01.
-   Sigue pendiente `componentes_csp`.
-7. **Segmentación (devolución).** Resuelta. El análisis se hace por ventanas fijas de
+6. **Parámetros.** Los de preprocesamiento se eligieron en el notebook 01 y los umbrales
+   de las reglas en el 03. CSP usa dos filtros de cada extremo (`componentes_csp = 2`).
+7. **Segmentación (devolución).** El análisis se hace por ventanas fijas de
    30 s y la marca de no estacionariedad con modelo AR queda solo como información.
-8. **Artefacto cardíaco (devolución).** Resuelta. El promedio alrededor de cada latido
-   muestra un artefacto relevante, por lo que la remoción queda activa.
-9. **Sin inteligencia artificial (devolución).** Resuelta: LDA y HMM se reemplazaron
+8. **Artefacto cardíaco (devolución).** El promedio alrededor de cada latido muestra un
+   artefacto unas 40 veces por encima del control, y la remoción lo saca. Queda activa,
+   aunque H4 mostró que no cambia el acuerdo de las reglas finales.
+9. **Sin inteligencia artificial (devolución).** LDA y HMM se reemplazaron
    por reglas AASM y suavizado por reglas (ver arriba). Esto cambió
    `ConfigClasificacion` en `comun/config.py` (se fue `usar_hmm`; se agregaron los
    umbrales y el tipo de suavizado), que no afecta la huella del caché de descriptores.
-10. **Fracción de ondas lentas (Frente B).** La AASM define N3 por ondas lentas en
-    ≥ 20 % de la época. Hoy la regla usa `ondas.cantidad`; un descriptor
-    `ondas.fraccion` (tiempo con ondas lentas sobre 30 s) la haría más fiel al manual.
+10. **Fracción de ondas lentas.** La AASM define N3 por ondas lentas en al menos el 20 % de
+    la época, y la regla usa la cantidad de ondas. Medir esa fracción quedó como mejora
+    para la instancia final.
